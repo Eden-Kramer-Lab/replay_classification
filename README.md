@@ -1,5 +1,9 @@
 # Replay-Content-Classification
-Non-parametric categorization of replay content from multiunit spiking activity.
+Replay Content Classification (RCC) is a python package for categorizing hippocampal replay events using multiunit spiking activity. Multiunit spiking activity can be more informative than sorted spikes because there is no need to distinguish between neurons, meaning that we can take advantage of partial information from neurons that are not well separated in terms of electrophysiological signal.
+
+This package also provides:
++  Metrics for the confidence of classification
++  Convenient functions for diagnostic plotting
 
 ![Posterior Density](/replay_example.png)
 
@@ -13,7 +17,7 @@ real-time applications. Journal of Neurophysiology 116, 2221-2235.
 
 ### Installation ###
 
-1. Install miniconda (or anaconda) if it isn't already installed. Type into bash:
+1. Install miniconda (or anaconda) if it isn't already installed. Type into bash (or install from the anaconda website):
 ```bash
 wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
 bash miniconda.sh -b -p $HOME/miniconda

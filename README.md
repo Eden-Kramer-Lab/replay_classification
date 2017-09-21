@@ -1,5 +1,5 @@
 # Replay-Content-Classification
-Replay Content Classification (RCC) is a python package for categorizing hippocampal replay events using multiunit spiking activity. Multiunit spiking activity can be more informative than sorted spikes because there is no need to distinguish between neurons, meaning that we can take advantage of partial information from neurons that are not well separated in terms of electrophysiological signal.
+`Replay Content Classification` is a python package for categorizing hippocampal replay events using multiunit spiking activity. Multiunit spiking activity can be more informative than sorted spikes because there is no need to distinguish between neurons, meaning that we can take advantage of partial information from neurons that are not well separated in terms of electrophysiological signal.
 
 This package also provides:
 +  Metrics for the confidence of classification

@@ -1,5 +1,6 @@
 # Replay-Content-Classification
 [![Coverage Status](https://coveralls.io/repos/github/UriEdenLab/Replay-Content-Classification/badge.svg?branch=master)](https://coveralls.io/github/UriEdenLab/Replay-Content-Classification?branch=master)
+
 `Replay Content Classification` is a python package for categorizing hippocampal replay events using multiunit spiking activity. Multiunit spiking activity can be more informative than sorted spikes because there is no need to distinguish between neurons, meaning that we can take advantage of partial information from neurons that are not well separated in terms of electrophysiological signal.
 
 This package also provides:

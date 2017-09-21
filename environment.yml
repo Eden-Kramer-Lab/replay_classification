@@ -1,0 +1,20 @@
+name: Replay-Content-Classification
+channels:
+- conda-forge
+- defaults
+dependencies:
+- python=3.5
+- setuptools
+- numpy
+- scipy
+- pandas
+- xarray
+- statsmodels
+- matplotlib
+- seaborn
+- patsy
+- pytest
+- jupyter
+- coveralls
+- pytest-cov
+- numba

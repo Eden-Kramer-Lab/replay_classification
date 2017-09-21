@@ -1,9 +1,9 @@
 # Replay-Content-Classification
 Non-parametric categorization of replay content from multiunit spiking activity.
 
-![](/replay_example.png)
+![Posterior Density](/replay_example.png)
 
-![](/state_probability.png)
+![Probability of States](/state_probability.png)
 
 ### References ###
 

@@ -7,6 +7,8 @@ This package also provides:
 +  Metrics for the confidence of classification
 +  Convenient functions for diagnostic plotting
 
+See the notebooks ([\#1](examples/Simulate_Ripple_Decoding_Data_Sorted_Spikes.ipynb), [\#2](examples/Simulate_Ripple_Decoding_Data_Clusterless.ipynb)) for more information on how to use the package.
+
 ![Posterior Density](/replay_example.png)
 
 ![Probability of States](/state_probability.png)

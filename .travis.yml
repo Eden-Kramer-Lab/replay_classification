@@ -13,8 +13,8 @@ install:
   - conda update -q conda
   - conda info -a
   - conda env create -f environment.yml
-  - source activate spectral
+  - source activate Replay-Content-Classification
   - python setup.py develop
-script: pytest --cov=spectral tests/
+script: pytest --cov=replay_classification tests/
 after_success:
     - coveralls

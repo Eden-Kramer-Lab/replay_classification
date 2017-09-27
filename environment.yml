@@ -1,4 +1,4 @@
-name: Replay-Content-Classification
+name: replay_classification
 channels:
 - conda-forge
 - defaults

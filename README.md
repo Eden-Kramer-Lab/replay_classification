@@ -1,7 +1,7 @@
-# Replay-Content-Classification
-[![Coverage Status](https://coveralls.io/repos/github/UriEdenLab/Replay-Content-Classification/badge.svg?branch=master)](https://coveralls.io/github/UriEdenLab/Replay-Content-Classification?branch=master)
+# replay_classification
+[![Coverage Status](https://coveralls.io/repos/github/UriEdenLab/replay_classification/badge.svg?branch=master)](https://coveralls.io/github/UriEdenLab/replay_classification?branch=master)
 
-`Replay Content Classification` is a python package for categorizing hippocampal replay events using multiunit spiking activity. Multiunit spiking activity can be more informative than sorted spikes because there is no need to distinguish between neurons, meaning that we can take advantage of partial information from neurons that are not well separated in terms of electrophysiological signal.
+`replay_classification` is a python package for categorizing hippocampal replay events using multiunit spiking activity. Multiunit spiking activity can be more informative than sorted spikes because there is no need to distinguish between neurons, meaning that we can take advantage of partial information from neurons that are not well separated in terms of electrophysiological signal.
 
 This package also provides:
 +  Metrics for the confidence of classification
@@ -19,7 +19,25 @@ See the notebooks ([\#1](examples/Simulate_Ripple_Decoding_Data_Sorted_Spikes.ip
 (2016). Rapid classification of hippocampal replay content for
 real-time applications. Journal of Neurophysiology 116, 2221-2235.
 
+### Package Requirements ###
+- python=3.5
+- numpy
+- scipy
+- pandas
+- xarray
+- statsmodels
+- matplotlib
+- seaborn
+- patsy
+- numba
+
 ### Installation ###
+
+```python
+pip install replay_classification
+```
+
+### Developer Installation ###
 
 1. Install miniconda (or anaconda) if it isn't already installed. Type into bash (or install from the anaconda website):
 ```bash
@@ -29,12 +47,12 @@ export PATH="$HOME/miniconda/bin:$PATH"
 hash -r
 ```
 
-2. Go to the local repository (`.../Replay-Content-Classification`) and install the anaconda environment for the repository. Type into bash:
+2. Go to the local repository (`.../replay_classification`) and install the anaconda environment for the repository. Type into bash:
 ```bash
 conda update -q conda
 conda info -a
 conda env create -f environment.yml
-source activate Replay-Content-Classification
+source activate replay_classification
 python setup.py develop
 ```
 

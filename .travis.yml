@@ -13,7 +13,7 @@ install:
   - conda update -q conda
   - conda info -a
   - conda env create -f environment.yml
-  - source activate Replay-Content-Classification
+  - source activate replay_classification
   - python setup.py develop
 script: pytest --cov=replay_classification tests/
 after_success:

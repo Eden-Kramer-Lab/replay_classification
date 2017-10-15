@@ -40,6 +40,10 @@ and the DOI for the package repository (see the DOI badge at the start of the RE
 ```python
 pip install replay_classification
 ```
+Or
+```python
+conda install -c edeno replay_classification
+```
 
 ### Developer Installation ###
 

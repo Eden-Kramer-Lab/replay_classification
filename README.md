@@ -1,17 +1,17 @@
 # replay_classification
 [![Coverage Status](https://coveralls.io/repos/github/Eden-Kramer-Lab/replay_classification/badge.svg?branch=master)](https://coveralls.io/github/Eden-Kramer-Lab/replay_classification?branch=master) [![DOI](https://zenodo.org/badge/104356770.svg)](https://zenodo.org/badge/latestdoi/104356770)
 
-`replay_classification` is a python package for categorizing hippocampal replay events using multiunit spiking activity. Multiunit spiking activity can be more informative than sorted spikes because there is no need to distinguish between neurons, meaning that we can take advantage of partial information from neurons that are not well separated in terms of electrophysiological signal.
+`replay_classification` is a python package for categorizing hippocampal replay events using multiunit spiking activity. Multiunit spiking activity can be more informative than sorted spikes, because there is no need to distinguish between neurons. This has several advantages:
+1. We can take advantage of partial information from neurons that are not well separated in terms of electrophysiological signal.
+2. Saves time, because no spike-sorting step is necessary.
 
 This package also provides:
-+  Metrics for the confidence of classification
-+  Convenient functions for diagnostic plotting
-
-See the notebooks ([\#1](examples/Simulate_Ripple_Decoding_Data_Sorted_Spikes.ipynb), [\#2](examples/Simulate_Ripple_Decoding_Data_Clusterless.ipynb)) for more information on how to use the package.
-
++  Metrics for the confidence of classification, allowing for experimental intervention before a replay event is completed.
+![Probability of States](/state_probability.png)
++  Convenient functions for diagnostic plotting.
 ![Posterior Density](/replay_example.png)
 
-![Probability of States](/state_probability.png)
+See the notebooks ([\#1](examples/Simulate_Ripple_Decoding_Data_Sorted_Spikes.ipynb), [\#2](examples/Simulate_Ripple_Decoding_Data_Clusterless.ipynb)) for more information on how to use the package.
 
 ### References ###
 

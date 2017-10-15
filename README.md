@@ -7,8 +7,10 @@
 
 This package also provides:
 +  Metrics for the confidence of classification, allowing for experimental intervention before a replay event is completed.
+
 ![Probability of States](/state_probability.png)
 +  Convenient functions for diagnostic plotting.
+
 ![Posterior Density](/replay_example.png)
 
 See the notebooks ([\#1](examples/Simulate_Ripple_Decoding_Data_Sorted_Spikes.ipynb), [\#2](examples/Simulate_Ripple_Decoding_Data_Clusterless.ipynb)) for more information on how to use the package.

@@ -15,11 +15,13 @@ This package also provides:
 
 See the notebooks ([\#1](examples/Simulate_Ripple_Decoding_Data_Sorted_Spikes.ipynb), [\#2](examples/Simulate_Ripple_Decoding_Data_Clusterless.ipynb)) for more information on how to use the package.
 
-### References ###
-
+### References and Citation ###
+Please cite:
 > Deng, X., Liu, D.F., Karlsson, M.P., Frank, L.M., and Eden, U.T.
 (2016). Rapid classification of hippocampal replay content for
 real-time applications. Journal of Neurophysiology 116, 2221-2235.
+
+and the DOI for the package repository (see the DOI badge at the start of the README).
 
 ### Package Requirements ###
 - python=3.5

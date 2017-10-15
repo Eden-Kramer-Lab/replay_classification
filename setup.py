@@ -18,4 +18,5 @@ setup(
         packages=find_packages(),
         install_requires=INSTALL_REQUIRES,
         tests_require=TESTS_REQUIRE,
+        url='https://github.com/Eden-Kramer-Lab/replay_classification',
       )

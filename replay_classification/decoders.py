@@ -1,21 +1,20 @@
 from logging import getLogger
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
+import xarray as xr
 from patsy import dmatrix
 
-import xarray as xr
+import seaborn as sns
 
 from .clusterless import (build_joint_mark_intensity,
                           estimate_ground_process_intensity,
-                          poisson_mark_likelihood,
-                          estimate_marginalized_joint_mark_intensity)
+                          estimate_marginalized_joint_mark_intensity,
+                          poisson_mark_likelihood)
 from .core import (combined_likelihood, empirical_movement_transition_matrix,
-                   get_bin_centers, predict_state,
-                   inbound_outbound_initial_conditions,
-                   uniform_initial_conditions)
+                   get_bin_centers, inbound_outbound_initial_conditions,
+                   predict_state, uniform_initial_conditions)
 from .sorted_spikes import (get_conditional_intensity, glm_fit,
                             poisson_likelihood,
                             predictors_by_trajectory_direction)

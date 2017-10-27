@@ -96,7 +96,8 @@ class ClusterlessDecoder(object):
         self.place_std_deviation = np.diff(self.place_bin_edges)[0]
         self.place_bin_centers = get_bin_centers(self.place_bin_edges)
 
-        trajectory_directions = np.unique(self.trajectory_direction)
+        trajectory_directions = np.unique(
+            self.trajectory_direction[pd.notnull(self.trajectory_direction)])
 
         if self.initial_conditions == 'Inbound-Outbound':
             self.initial_conditions = inbound_outbound_initial_conditions(

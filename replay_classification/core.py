@@ -18,8 +18,7 @@ logger = getLogger(__name__)
 
 
 def predict_state(data, initial_conditions=None, state_transition=None,
-                  likelihood_function=None, likelihood_kwargs={},
-                  debug=False):
+                  likelihood_function=None, likelihood_kwargs={}):
     '''Adaptive filter to iteratively calculate the posterior probability
     of a state variable
 

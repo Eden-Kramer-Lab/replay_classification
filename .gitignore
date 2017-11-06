@@ -99,3 +99,6 @@ ENV/
 
 # mypy
 .mypy_cache/
+replay_classification/bin/activate
+replay_classification/bin/conda
+replay_classification/bin/deactivate

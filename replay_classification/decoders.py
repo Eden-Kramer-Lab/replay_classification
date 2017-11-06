@@ -233,7 +233,7 @@ class ClusterlessDecoder(object):
 
         Parameters
         ----------
-        spike_marks : ndarray, shape (n_time, n_marks)
+        spike_marks : ndarray, shape (n_signals, n_time, n_marks)
             If spike does not occur, the row must be marked with np.nan.
         time : ndarray, optional, shape (n_time,)
 

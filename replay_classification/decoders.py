@@ -3,10 +3,9 @@ from logging import getLogger
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import xarray as xr
 from patsy import dmatrix
-
-import seaborn as sns
 
 from .clusterless import (build_joint_mark_intensity,
                           estimate_ground_process_intensity,

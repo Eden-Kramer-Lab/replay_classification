@@ -38,17 +38,25 @@ def predict_state(data, initial_conditions=None, state_transition=None,
                                         n_parameters)
 
     '''
-    posterior = initial_conditions
     n_time_points = data.shape[1]
-    posterior_over_time = np.zeros(
-        (n_time_points, *initial_conditions.shape))
+    shape = (n_time_points, *initial_conditions.shape)
+    posterior = np.zeros(shape)
+    likelihood = np.zeros(shape)
+    prior = np.zeros(shape)
+
+    current_posterior = initial_conditions.copy()
+
     for time_ind in np.arange(n_time_points):
-        posterior_over_time[time_ind, :] = posterior
-        prior = _get_prior(posterior, state_transition)
-        likelihood = likelihood_function(
+        prior[time_ind] = _get_prior(current_posterior, state_transition)
+        likelihood[time_ind] = likelihood_function(
             data[:, time_ind, ...], **likelihood_kwargs)
-        posterior = _update_posterior(prior, likelihood)
-    return posterior_over_time
+        posterior[time_ind] = _update_posterior(
+            prior[time_ind], likelihood[time_ind])
+        current_posterior = posterior[time_ind].copy()
+
+    return {'posterior_density': posterior,
+            'likelihood': likelihood,
+            'prior': prior}
 
 
 def _update_posterior(prior, likelihood):

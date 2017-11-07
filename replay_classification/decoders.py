@@ -242,7 +242,7 @@ class ClusterlessDecoder(object):
         predicted_state : str
 
         '''
-        posterior_density = predict_state(
+        results = predict_state(
             spike_marks,
             initial_conditions=self.initial_conditions.values,
             state_transition=self.state_transition_matrix.values,
@@ -250,20 +250,20 @@ class ClusterlessDecoder(object):
             likelihood_kwargs=self._combined_likelihood_kwargs)
         coords = dict(
             time=(time if time is not None
-                  else np.arange(posterior_density.shape[0])),
+                  else np.arange(results['posterior_density'].shape[0])),
             position=self.place_bin_centers,
             state=self.state_names
         )
 
-        posterior_density = xr.DataArray(
-            posterior_density,
-            dims=['time', 'state', 'position'],
-            coords=coords,
-            name='posterior_density')
+        DIMS = ['time', 'state', 'position']
+
+        results = xr.Dataset(
+            {key: (DIMS, value) for key, value in results.items()},
+            coords=coords)
 
         return DecodingResults(
-            posterior_density=posterior_density,
-            spikes=spike_marks
+            results=results,
+            spikes=spike_marks,
         )
 
 
@@ -429,7 +429,7 @@ class SortedSpikeDecoder(object):
         predicted_state : str
 
         '''
-        posterior_density = predict_state(
+        results = predict_state(
             spikes,
             initial_conditions=self.initial_conditions.values,
             state_transition=self.state_transition_matrix.values,
@@ -437,31 +437,30 @@ class SortedSpikeDecoder(object):
             likelihood_kwargs=self._combined_likelihood_kwargs)
         coords = dict(
             time=(time if time is not None
-                  else np.arange(posterior_density.shape[0])),
+                  else np.arange(results['posterior_density'].shape[0])),
             position=self.place_bin_centers,
             state=self.state_names
         )
+        DIMS = ['time', 'state', 'position']
 
-        posterior_density = xr.DataArray(
-            posterior_density,
-            dims=['time', 'state', 'position'],
-            coords=coords,
-            name='posterior_density')
+        results = xr.Dataset(
+            {key: (DIMS, value) for key, value in results.items()},
+            coords=coords)
 
         return DecodingResults(
-            posterior_density=posterior_density,
+            results=results,
             spikes=spikes
         )
 
 
 class DecodingResults():
 
-    def __init__(self, posterior_density, spikes=None):
-        self.posterior_density = posterior_density
+    def __init__(self, results, spikes=None):
+        self.results = results
         self.spikes = spikes
 
     def state_probability(self):
-        return self.posterior_density.sum('position').to_series().unstack()
+        return self.results['posterior_density'].sum('position').to_series().unstack()
 
     def predicted_state(self):
         return self.state_probability().iloc[-1].argmax()
@@ -471,11 +470,11 @@ class DecodingResults():
 
     def plot_posterior_density(self, **kwargs):
         try:
-            return self.posterior_density.plot(
+            return self.results['posterior_density'].plot(
                 x='time', y='position', col='state', col_wrap=2,
                 robust=True, **kwargs)
         except ValueError:
-            return self.posterior_density.plot(
+            return self.results['posterior_density'].plot(
                 x='time', y='position', robust=True, **kwargs)
 
     def plot_state_probability(self, **kwargs):

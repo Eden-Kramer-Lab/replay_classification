@@ -16,7 +16,7 @@ def test__normalize_column_probability():
     transition_matrix = np.arange(1, 10).reshape(3, 3)
     expected = np.ones((3,))
     assert np.allclose(
-        _normalize_column_probability(transition_matrix).sum(axis=0),
+        _normalize_column_probability(transition_matrix).sum(axis=1),
         expected)
 
 

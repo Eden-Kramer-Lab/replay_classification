@@ -143,16 +143,15 @@ def empirical_movement_transition_matrix(place, place_bin_edges,
                                                place_bin_edges),
                                          normed=False)
     smoothed_movement_bins_probability = gaussian_filter(
-        _normalize_column_probability(
+        _normalize_row_probability(
             _fix_zero_bins(movement_bins)), sigma=0.5)
     return np.linalg.matrix_power(
         smoothed_movement_bins_probability,
         sequence_compression_factor)
 
 
-def _normalize_column_probability(x):
-    '''Ensure the state transition matrix columns integrate to 1
-    so that it is a probability distribution
+def _normalize_row_probability(x):
+    '''Ensure the state transition matrix rows sum to 1
     '''
     return x / x.sum(axis=1, keepdims=True)
 

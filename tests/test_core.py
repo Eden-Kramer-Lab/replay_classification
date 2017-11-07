@@ -3,20 +3,20 @@ from pytest import mark
 from scipy.linalg import block_diag
 
 from replay_classification.core import (_fix_zero_bins, _get_prior,
-                                        _normalize_column_probability,
+                                        _normalize_row_probability,
                                         _update_posterior,
                                         combined_likelihood,
                                         get_bin_centers,
                                         normalize_to_probability)
 
 
-def test__normalize_column_probability():
-    '''All columns should sum to one after normalization
+def test__normalize_row_probability():
+    '''All rows should sum to one after normalization
     '''
     transition_matrix = np.arange(1, 10).reshape(3, 3)
     expected = np.ones((3,))
     assert np.allclose(
-        _normalize_column_probability(transition_matrix).sum(axis=1),
+        _normalize_row_probability(transition_matrix).sum(axis=1),
         expected)
 
 

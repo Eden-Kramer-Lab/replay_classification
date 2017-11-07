@@ -147,7 +147,7 @@ def _normalize_column_probability(x):
     '''Ensure the state transition matrix columns integrate to 1
     so that it is a probability distribution
     '''
-    return np.dot(x, np.diag(1 / x.sum(axis=0)))
+    return x / x.sum(axis=1, keepdims=True)
 
 
 def _fix_zero_bins(movement_bins):

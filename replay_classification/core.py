@@ -137,10 +137,9 @@ def empirical_movement_transition_matrix(place, place_bin_edges,
     smoothed_movement_bins_probability = gaussian_filter(
         _normalize_column_probability(
             _fix_zero_bins(movement_bins)), sigma=0.5)
-    return _normalize_column_probability(
-        np.linalg.matrix_power(
-            smoothed_movement_bins_probability,
-            sequence_compression_factor))
+    return np.linalg.matrix_power(
+        smoothed_movement_bins_probability,
+        sequence_compression_factor)
 
 
 def _normalize_column_probability(x):

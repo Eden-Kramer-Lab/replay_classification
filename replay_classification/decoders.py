@@ -7,6 +7,8 @@ import seaborn as sns
 import xarray as xr
 from patsy import dmatrix
 
+import holoviews as hv
+
 from .clusterless import (build_joint_mark_intensity,
                           estimate_ground_process_intensity,
                           estimate_marginalized_joint_mark_intensity,
@@ -28,6 +30,7 @@ _DEFAULT_OBSERVATION_STATE_ORDER = ['Outbound', 'Outbound',
 
 _DEFAULT_STATE_TRANSITION_STATE_ORDER = ['Outbound', 'Inbound',
                                          'Inbound', 'Outbound']
+hv.extension('bokeh', 'matplotlib')
 
 
 class ClusterlessDecoder(object):
@@ -476,6 +479,18 @@ class DecodingResults():
         except ValueError:
             return self.results['posterior_density'].plot(
                 x='time', y='position', robust=True, **kwargs)
+
+    def plot_interactive(self):
+        ds = hv.Dataset(self.results)
+        likelihood_plot = ds.to(hv.Curve, 'position', 'likelihood')
+        posterior_plot = ds.to(hv.Curve, 'position', 'posterior_density')
+        prior_plot = ds.to(hv.Curve, 'position', 'prior')
+        plot_opts = dict(shared_yaxis=True, shared_xaxis=True)
+        norm_opts = dict(framewise=True)
+        hv.opts({'Curve': dict(norm=norm_opts)}, likelihood_plot)
+        return (prior_plot.grid('state').opts(plot=plot_opts) +
+                likelihood_plot.grid('state').opts(plot=plot_opts) +
+                posterior_plot.grid('state').opts(plot=plot_opts)).cols(1)
 
     def plot_state_probability(self, **kwargs):
         return self.state_probability().plot(**kwargs)

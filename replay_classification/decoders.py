@@ -284,7 +284,7 @@ class SortedSpikeDecoder(object):
         Attributes
         ----------
         position : ndarray, shape (n_time,)
-        spike : ndarray, shape (n_time, n_neurons)
+        spike : ndarray, shape (n_neurons, n_time)
         trajectory_direction : ndarray, shape (n_time,)
         n_position_bins : int, optional
         replay_speedup_factor : int, optional
@@ -365,7 +365,7 @@ class SortedSpikeDecoder(object):
         design_matrix = dmatrix(
             formula, training_data, return_type='dataframe')
         fit = [glm_fit(spikes, design_matrix, ind)
-               for ind, spikes in enumerate(self.spikes.T)]
+               for ind, spikes in enumerate(self.spikes)]
 
         ci_by_state = {
             direction: get_conditional_intensity(
@@ -423,7 +423,7 @@ class SortedSpikeDecoder(object):
 
         Parameters
         ----------
-        spikes : ndarray, shape (n_time, n_neurons)
+        spikes : ndarray, shape (n_neurons, n_time)
             If spike does not occur, the row must be marked with np.nan.
         time : ndarray, optional, shape (n_time,)
 

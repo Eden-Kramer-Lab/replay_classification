@@ -13,7 +13,7 @@ This package also provides:
 
 ![Posterior Density](/replay_example.png)
 
-See the notebooks ([\#1](examples/Simulate_Ripple_Decoding_Data_Sorted_Spikes.ipynb), [\#2](examples/Simulate_Ripple_Decoding_Data_Clusterless.ipynb)) for more information on how to use the package.
+See the notebooks ([\#1](https://nbviewer.jupyter.org/github/Eden-Kramer-Lab/replay_classification/blob/master/examples/Simulate_Ripple_Decoding_Data_Sorted_Spikes.ipynb), [\#2](https://nbviewer.jupyter.org/github/Eden-Kramer-Lab/replay_classification/blob/master/examples/Simulate_Ripple_Decoding_Data_Clusterless.ipynb) for more information on how to use the package.
 
 ### References and Citation ###
 Please cite:

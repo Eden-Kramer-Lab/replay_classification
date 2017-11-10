@@ -64,7 +64,8 @@ class ClusterlessDecoder(object):
                  observation_state_order=_DEFAULT_OBSERVATION_STATE_ORDER,
                  state_transition_state_order=_DEFAULT_STATE_TRANSITION_STATE_ORDER,
                  initial_conditions='Inbound-Outbound',
-                 time_bin_size=1):
+                 time_bin_size=1,
+                 place_std_deviation=None):
         self.position = np.array(position)
         self.trajectory_direction = np.array(trajectory_direction)
         self.spike_marks = np.array(spike_marks)
@@ -76,6 +77,7 @@ class ClusterlessDecoder(object):
         self.state_transition_state_order = state_transition_state_order
         self.initial_conditions = initial_conditions
         self.time_bin_size = time_bin_size
+        self.place_std_deviation = place_std_deviation
 
     def fit(self):
         '''Fits the decoder model for each trajectory_direction.
@@ -96,6 +98,7 @@ class ClusterlessDecoder(object):
             self.position.min(), self.position.max(),
             self.n_position_bins + 1)
         self.place_std_deviation = np.diff(self.place_bin_edges)[0]
+        if self.place_std_deviation is None:
         self.place_bin_centers = get_bin_centers(self.place_bin_edges)
 
         trajectory_directions = np.unique(

@@ -24,7 +24,7 @@ real-time applications. Journal of Neurophysiology 116, 2221-2235.
 and the DOI for the package repository (see the DOI badge at the start of the README).
 
 ### Package Requirements ###
-- python=3.5
+- python>=3.5
 - numpy
 - scipy
 - pandas
@@ -34,6 +34,7 @@ and the DOI for the package repository (see the DOI badge at the start of the RE
 - seaborn
 - patsy
 - numba
+- holoviews
 
 ### Installation ###
 

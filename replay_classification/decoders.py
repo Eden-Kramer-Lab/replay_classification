@@ -126,9 +126,9 @@ class ClusterlessDecoder(object):
 
         state_transition_by_state = {
             direction: empirical_movement_transition_matrix(
-                self.position[
-                    np.in1d(self.trajectory_direction, direction)],
-                self.place_bin_edges, self.replay_speedup_factor)
+                self.position,
+                self.place_bin_edges, self.replay_speedup_factor,
+                np.in1d(self.trajectory_direction, direction))
             for direction in trajectory_directions}
         state_transition_matrix = np.stack(
             [state_transition_by_state[state]
@@ -343,9 +343,9 @@ class SortedSpikeDecoder(object):
 
         state_transition_by_state = {
             direction: empirical_movement_transition_matrix(
-                self.position[
-                    np.in1d(self.trajectory_direction, direction)],
-                self.place_bin_edges, self.replay_speedup_factor)
+                self.position,
+                self.place_bin_edges, self.replay_speedup_factor,
+                np.in1d(self.trajectory_direction, direction))
             for direction in trajectory_directions}
         state_transition_matrix = np.stack(
             [state_transition_by_state[state]

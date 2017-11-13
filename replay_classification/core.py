@@ -112,7 +112,8 @@ def combined_likelihood(data, likelihood_function=None,
 
 
 def empirical_movement_transition_matrix(place, place_bin_edges,
-                                         sequence_compression_factor=16):
+                                         sequence_compression_factor=16,
+                                         is_condition=None):
     '''Estimate the probablity of the next position based on the movement
      data, given the movment is sped up by the
      `sequence_compression_factor`
@@ -124,12 +125,13 @@ def empirical_movement_transition_matrix(place, place_bin_edges,
 
     Parameters
     ----------
-    place : array_like
+    place : array_like, shape (n_time,)
         Linearized position of the animal over time
-    place_bin_edges : array_like
+    place_bin_edges : array_like, shape (n_bins,)
     sequence_compression_factor : int, optional
         How much the movement is sped-up during a replay event
-
+    is_condition : array_like, shape (n_time,)
+        Boolean indicator for an experimental condition.
     Returns
     -------
     empirical_movement_transition_matrix : array_like,
@@ -138,10 +140,17 @@ def empirical_movement_transition_matrix(place, place_bin_edges,
 
     '''
     place = np.array(place)
-    movement_bins, _, _ = np.histogram2d(place[1:], place[:-1],
+    if is_condition is None:
+        is_condition = np.ones_like(place, dtype=bool)
+
+    place = np.stack((place[1:], place[:-1]))
+    place = place[:, is_condition[1:]]
+
+    movement_bins, _, _ = np.histogram2d(place[0], place[1],
                                          bins=(place_bin_edges,
                                                place_bin_edges),
                                          normed=False)
+
     smoothed_movement_bins_probability = gaussian_filter(
         _normalize_row_probability(
             _fix_zero_bins(movement_bins)), sigma=0.5)

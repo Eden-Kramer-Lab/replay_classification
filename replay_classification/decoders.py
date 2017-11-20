@@ -54,6 +54,7 @@ class ClusterlessDecoder(object):
     initial_conditions : 'Inbound-Outbound' | 'Uniform' | dict of array,
         optional
     time_bin_size : float, optional
+    confidence_threshold : float, optional
 
     '''
 
@@ -65,7 +66,8 @@ class ClusterlessDecoder(object):
                  state_transition_state_order=_DEFAULT_STATE_TRANSITION_STATE_ORDER,
                  initial_conditions='Inbound-Outbound',
                  time_bin_size=1,
-                 place_std_deviation=None):
+                 place_std_deviation=None,
+                 confidence_threshold=0.8):
         self.position = np.array(position)
         self.trajectory_direction = np.array(trajectory_direction)
         self.spike_marks = np.array(spike_marks)
@@ -78,6 +80,7 @@ class ClusterlessDecoder(object):
         self.initial_conditions = initial_conditions
         self.time_bin_size = time_bin_size
         self.place_std_deviation = place_std_deviation
+        self.confidence_threshold = confidence_threshold
 
     def fit(self):
         '''Fits the decoder model for each trajectory_direction.
@@ -270,6 +273,7 @@ class ClusterlessDecoder(object):
         return DecodingResults(
             results=results,
             spikes=spike_marks,
+            confidence_threshold=self.confidence_threshold,
         )
 
 
@@ -281,7 +285,8 @@ class SortedSpikeDecoder(object):
                  observation_state_order=_DEFAULT_OBSERVATION_STATE_ORDER,
                  state_transition_state_order=_DEFAULT_STATE_TRANSITION_STATE_ORDER,
                  initial_conditions='Inbound-Outbound',
-                 time_bin_size=1):
+                 time_bin_size=1,
+                 confidence_threshold=0.8):
         '''
 
         Attributes
@@ -296,6 +301,7 @@ class SortedSpikeDecoder(object):
         initial_conditions : 'Inbound-Outbound' | 'Uniform' | dict of array,
             optional
         time_bin_size : float, optional
+        confidence_threshold : float, optional
 
         '''
         self.position = position
@@ -308,6 +314,7 @@ class SortedSpikeDecoder(object):
         self.state_transition_state_order = state_transition_state_order
         self.initial_conditions = initial_conditions
         self.time_bin_size = time_bin_size
+        self.confidence_threshold = confidence_threshold
 
     def fit(self):
         '''Fits the decoder model by state
@@ -455,24 +462,39 @@ class SortedSpikeDecoder(object):
 
         return DecodingResults(
             results=results,
-            spikes=spikes
+            spikes=spikes,
+            confidence_threshold=self.confidence_threshold,
         )
 
 
 class DecodingResults():
 
-    def __init__(self, results, spikes=None):
+    def __init__(self, results, spikes=None, confidence_threshold=0.8):
         self.results = results
         self.spikes = spikes
+        self.confidence_threshold = confidence_threshold
 
     def state_probability(self):
-        return self.results['posterior_density'].sum('position').to_series().unstack()
+        return (self.results['posterior_density'].sum('position')
+                .to_series().unstack())
 
     def predicted_state(self):
-        return self.state_probability().iloc[-1].argmax()
+        state_probability = self.state_probability()
+        is_threshold = np.sum(
+            (state_probability > self.confidence_threshold), axis=1)
+        if np.any(is_threshold):
+            return state_probability.loc[is_threshold.argmax()].argmax()
+        else:
+            return np.nan
 
     def predicted_state_probability(self):
-        return self.state_probability().iloc[-1].max()
+        state_probability = self.state_probability()
+        is_threshold = np.sum(
+            (state_probability > self.confidence_threshold), axis=1)
+        if np.any(is_threshold):
+            return state_probability.loc[is_threshold.argmax()].max()
+        else:
+            return np.nan
 
     def plot_posterior_density(self, **kwargs):
         try:

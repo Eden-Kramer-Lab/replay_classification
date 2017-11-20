@@ -101,7 +101,9 @@ class ClusterlessDecoder(object):
             self.position.min(), self.position.max(),
             self.n_position_bins + 1)
         if self.place_std_deviation is None:
-            self.place_std_deviation = 2 * np.diff(self.place_bin_edges)[0]
+            self.place_std_deviation = (
+                (self.position.max() - self.position.min()) /
+                self.n_position_bins)
         self.place_bin_centers = get_bin_centers(self.place_bin_edges)
 
         trajectory_directions = np.unique(

@@ -470,7 +470,13 @@ class DecodingResults():
         return self.results['posterior_density'].sum('position').to_series().unstack()
 
     def predicted_state(self):
-        return self.state_probability().iloc[-1].argmax()
+        state_probability = self.state_probability()
+        is_threshold = np.sum(
+            (state_probability > self.confidence_threshold), axis=1)
+        if np.any(is_threshold):
+            return state_probability.loc[is_threshold.argmax()].argmax()
+        else:
+            return 'Unclassified'
 
     def predicted_state_probability(self):
         return self.state_probability().iloc[-1].max()

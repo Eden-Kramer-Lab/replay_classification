@@ -131,7 +131,7 @@ def combined_likelihood(data, log_likelihood_function=None,
 
     '''
     try:
-        return np.nansum(
+        return np.sum(
             log_likelihood_function(data, **likelihood_kwargs),
             axis=0).squeeze()
     except ValueError:

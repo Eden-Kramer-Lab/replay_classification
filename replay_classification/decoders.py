@@ -377,7 +377,8 @@ class SortedSpikeDecoder(object):
             trajectory_direction=self.trajectory_direction))
         design_matrix = dmatrix(
             formula, training_data, return_type='dataframe')
-        fit = [fit_glm_model(spikes, design_matrix)
+        fit = [fit_glm_model(
+                pd.DataFrame(spikes).loc[design_matrix.index], design_matrix)
                for spikes in self.spikes]
 
         ci_by_state = {

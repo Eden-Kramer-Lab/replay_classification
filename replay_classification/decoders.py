@@ -467,7 +467,8 @@ class DecodingResults():
         self.spikes = spikes
 
     def state_probability(self):
-        return self.results['posterior_density'].sum('position').to_series().unstack()
+        return (self.results['posterior_density'].sum('position')
+                .to_series().unstack())
 
     def predicted_state(self):
         state_probability = self.state_probability()

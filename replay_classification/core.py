@@ -8,6 +8,7 @@ References
        real-time applications. Journal of Neurophysiology 116, 2221-2235.
 
 '''
+from functools import wraps
 from logging import getLogger
 
 import numpy as np
@@ -81,7 +82,33 @@ def _get_prior(posterior, state_transition):
         state_transition, posterior[..., np.newaxis]).squeeze()
 
 
-def combined_likelihood(data, likelihood_function=None,
+def scaled_likelihood(log_likelihood_func):
+    '''Converts a log likelihood to a scaled likelihood with its max value at
+    1.
+
+    Used primarily to keep the likelihood numerically stable because more
+    observations at a time point will lead to a smaller overall likelihood
+    and this can exceed the floating point accuarcy of a machine.
+
+    Parameters
+    ----------
+    log_likelihood_func : function
+
+    Returns
+    -------
+    scaled_likelihood : function
+
+    '''
+    @wraps(log_likelihood_func)
+    def decorated_function(*args, **kwargs):
+        log_likelihood = log_likelihood_func(*args, **kwargs)
+        return np.exp(log_likelihood - np.max(log_likelihood))
+
+    return decorated_function
+
+
+@scaled_likelihood
+def combined_likelihood(data, log_likelihood_function=None,
                         likelihood_kwargs={}):
     '''Applies likelihood function to each signal and returns their product
 
@@ -90,8 +117,8 @@ def combined_likelihood(data, likelihood_function=None,
     Parameters
     ----------
     data : array_like, shape=(n_signals, ...)
-    likelihood_function : function
-        Likelihood function to be applied to each signal.
+    log_likelihood_function : function
+        Log Likelihood function to be applied to each signal.
         The likelihood function must take data as its first argument.
         All other arguments for the likelihood should be passed
         via `likelihood_kwargs`
@@ -104,11 +131,11 @@ def combined_likelihood(data, likelihood_function=None,
 
     '''
     try:
-        return np.nanprod(
-            likelihood_function(data, **likelihood_kwargs),
+        return np.nansum(
+            log_likelihood_function(data, **likelihood_kwargs),
             axis=0).squeeze()
     except ValueError:
-        return likelihood_function(data, **likelihood_kwargs).squeeze()
+        return log_likelihood_function(data, **likelihood_kwargs).squeeze()
 
 
 def empirical_movement_transition_matrix(place, place_bin_edges,

@@ -12,12 +12,12 @@ import holoviews as hv
 from .clusterless import (build_joint_mark_intensity,
                           estimate_ground_process_intensity,
                           estimate_marginalized_joint_mark_intensity,
-                          poisson_mark_likelihood)
+                          poisson_mark_log_likelihood)
 from .core import (combined_likelihood, empirical_movement_transition_matrix,
                    get_bin_centers, inbound_outbound_initial_conditions,
                    predict_state, uniform_initial_conditions)
-from .sorted_spikes import (get_conditional_intensity, fit_glm_model,
-                            poisson_likelihood,
+from .sorted_spikes import (fit_glm_model, get_conditional_intensity,
+                            poisson_log_likelihood,
                             predictors_by_trajectory_direction)
 
 logger = getLogger(__name__)
@@ -176,7 +176,7 @@ class ClusterlessDecoder(object):
             time_bin_size=self.time_bin_size)
 
         self._combined_likelihood_kwargs = dict(
-            likelihood_function=poisson_mark_likelihood,
+            log_likelihood_function=poisson_mark_log_likelihood,
             likelihood_kwargs=likelihood_kwargs)
 
         return self
@@ -380,7 +380,7 @@ class SortedSpikeDecoder(object):
             [ci_by_state[state] for state in self.observation_state_order],
             axis=1)
         self._combined_likelihood_kwargs = dict(
-            likelihood_function=poisson_likelihood,
+            log_likelihood_function=poisson_log_likelihood,
             likelihood_kwargs=dict(
                 conditional_intensity=conditional_intensity)
         )

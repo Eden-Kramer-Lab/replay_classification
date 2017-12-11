@@ -66,8 +66,8 @@ def atleast_kd(array, k):
     return array.reshape(new_shape)
 
 
-def poisson_likelihood(is_spike, conditional_intensity=None,
-                       time_bin_size=1):
+def poisson_log_likelihood(is_spike, conditional_intensity=None,
+                           time_bin_size=1):
     '''Probability of parameters given spiking at a particular time
 
     Parameters
@@ -81,10 +81,12 @@ def poisson_likelihood(is_spike, conditional_intensity=None,
 
     Returns
     -------
-    poisson_likelihood : array_like, shape (n_signals,
-                                            n_states, n_place_bins)
+    scaled_poisson_log_likelihood : array_like, shape (n_signals,
+                                                   n_states, n_place_bins)
 
     '''
-    probability_no_spike = np.exp(-conditional_intensity * time_bin_size)
+    probability_no_spike = -conditional_intensity * time_bin_size
     is_spike = atleast_kd(is_spike, conditional_intensity.ndim)
-    return (conditional_intensity ** is_spike) * probability_no_spike
+    eps = np.spacing(1)
+    return (np.log(conditional_intensity + eps) * is_spike +
+            probability_no_spike)

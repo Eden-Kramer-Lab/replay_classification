@@ -9,9 +9,10 @@ References
 
 '''
 
+from functools import partial
+
 import numpy as np
 from numba import jit
-from functools import partial
 
 
 @jit(nopython=True)
@@ -41,9 +42,9 @@ def _normal_pdf(x, mean=0, std_deviation=1):
     return np.exp(-0.5 * z ** 2) / (np.sqrt(2.0 * np.pi) * std_deviation)
 
 
-def poisson_mark_likelihood(marks, joint_mark_intensity_functions=None,
-                            ground_process_intensity=None,
-                            time_bin_size=1):
+def poisson_mark_log_likelihood(marks, joint_mark_intensity_functions=None,
+                                ground_process_intensity=None,
+                                time_bin_size=1):
     '''Probability of parameters given spiking indicator at a particular
     time and associated marks.
 
@@ -53,7 +54,7 @@ def poisson_mark_likelihood(marks, joint_mark_intensity_functions=None,
     joint_mark_intensity : function
         Instantaneous probability of observing a spike given mark vector
         from data. The parameters for this function should already be set,
-        before it is passed to `poisson_mark_likelihood`.
+        before it is passed to `poisson_mark_log_likelihood`.
     ground_process_intensity : array, shape (n_signals, n_states,
                                              n_place_bins)
         Probability of observing a spike regardless of marks.
@@ -61,15 +62,15 @@ def poisson_mark_likelihood(marks, joint_mark_intensity_functions=None,
 
     Returns
     -------
-    poisson_mark_likelihood : array_like, shape (n_signals, n_place_bins)
+    poisson_mark_log_likelihood : array_like, shape (n_signals, n_place_bins)
 
     '''
-    probability_no_spike = np.exp(-ground_process_intensity * time_bin_size)
-    joint_mark_intensity = np.array(
+    probability_no_spike = -ground_process_intensity * time_bin_size
+    joint_mark_intensity = np.stack(
         [[jmi(signal_marks) for jmi in jmi_by_state]
          for signal_marks, jmi_by_state
          in zip(marks, joint_mark_intensity_functions)])
-    return joint_mark_intensity * probability_no_spike
+    return np.log(joint_mark_intensity) + probability_no_spike
 
 
 def evaluate_mark_space(test_marks, training_marks=None,

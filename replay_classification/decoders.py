@@ -12,12 +12,12 @@ import holoviews as hv
 from .clusterless import (build_joint_mark_intensity,
                           estimate_ground_process_intensity,
                           estimate_marginalized_joint_mark_intensity,
-                          poisson_mark_likelihood)
+                          poisson_mark_log_likelihood)
 from .core import (combined_likelihood, empirical_movement_transition_matrix,
                    get_bin_centers, inbound_outbound_initial_conditions,
                    predict_state, uniform_initial_conditions)
-from .sorted_spikes import (get_conditional_intensity, glm_fit,
-                            poisson_likelihood,
+from .sorted_spikes import (fit_glm_model, get_conditional_intensity,
+                            poisson_log_likelihood,
                             predictors_by_trajectory_direction)
 
 logger = getLogger(__name__)
@@ -181,7 +181,7 @@ class ClusterlessDecoder(object):
             time_bin_size=self.time_bin_size)
 
         self._combined_likelihood_kwargs = dict(
-            likelihood_function=poisson_mark_likelihood,
+            log_likelihood_function=poisson_mark_log_likelihood,
             likelihood_kwargs=likelihood_kwargs)
 
         return self
@@ -328,7 +328,8 @@ class SortedSpikeDecoder(object):
             self.n_position_bins + 1)
         self.place_bin_centers = get_bin_centers(self.place_bin_edges)
 
-        trajectory_directions = np.unique(self.trajectory_direction)
+        trajectory_directions = np.unique(
+            self.trajectory_direction[pd.notnull(self.trajectory_direction)])
 
         if self.initial_conditions == 'Inbound-Outbound':
             self.initial_conditions = inbound_outbound_initial_conditions(
@@ -369,15 +370,15 @@ class SortedSpikeDecoder(object):
 
         logger.info('Fitting observation model...')
         formula = ('1 + trajectory_direction * '
-                   'bs(position, df=5, degree=3)')
+                   'cr(position, df=5, constraints="center")')
 
         training_data = pd.DataFrame(dict(
             position=self.position,
             trajectory_direction=self.trajectory_direction))
         design_matrix = dmatrix(
             formula, training_data, return_type='dataframe')
-        fit = [glm_fit(spikes, design_matrix, ind)
-               for ind, spikes in enumerate(self.spikes)]
+        fit = [fit_glm_model(spikes, design_matrix)
+               for spikes in self.spikes]
 
         ci_by_state = {
             direction: get_conditional_intensity(
@@ -388,7 +389,7 @@ class SortedSpikeDecoder(object):
             [ci_by_state[state] for state in self.observation_state_order],
             axis=1)
         self._combined_likelihood_kwargs = dict(
-            likelihood_function=poisson_likelihood,
+            log_likelihood_function=poisson_log_likelihood,
             likelihood_kwargs=dict(
                 conditional_intensity=conditional_intensity)
         )
@@ -487,7 +488,7 @@ class DecodingResults():
         if np.any(is_threshold):
             return state_probability.loc[is_threshold.argmax()].argmax()
         else:
-            return np.nan
+            return 'Unclassified'
 
     def predicted_state_probability(self):
         state_probability = self.state_probability()

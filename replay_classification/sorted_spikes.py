@@ -7,7 +7,7 @@ from statsmodels.api import GLM, families
 logger = getLogger(__name__)
 
 
-def glm_fit(spikes, design_matrix, ind):
+def fit_glm_model(spikes, design_matrix, penalty=1E-5):
     '''Fits the Poisson model to the spikes from a neuron
 
     Parameters
@@ -15,23 +15,18 @@ def glm_fit(spikes, design_matrix, ind):
     spikes : array_like
     design_matrix : array_like or pandas DataFrame
     ind : int
+    penalty : float, optional
 
     Returns
     -------
-    fitted_model : object or NaN
-        Returns the statsmodel object if successful. If the model fails in
-        the weighted fit in the IRLS procedure, the model returns NaN.
+    fitted_model : statsmodel results
 
     '''
-    try:
-        logger.debug('\t\t...Neuron #{}'.format(ind + 1))
-        fit = GLM(spikes, design_matrix,
-                  family=families.Poisson(),
-                  drop='missing').fit(maxiter=30)
-        return fit if fit.converged else np.nan
-    except np.linalg.linalg.LinAlgError:
-        logger.warn('Data is poorly scaled for neuron #{}'.format(ind + 1))
-        return np.nan
+    model = GLM(spikes, design_matrix, family=families.Poisson(),
+                drop='missing')
+    regularization_weights = np.ones((design_matrix.shape[1],)) * penalty
+    regularization_weights[0] = 0.0
+    return model.fit_regularized(alpha=regularization_weights, L1_wt=0)
 
 
 def predictors_by_trajectory_direction(trajectory_direction,

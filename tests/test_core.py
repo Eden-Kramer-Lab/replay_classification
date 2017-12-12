@@ -38,11 +38,11 @@ def test_normalize_to_probability():
 
 
 @mark.parametrize('data, exponent, expected', [
-    (np.arange(1, 9), 1, np.nanprod(np.arange(1, 9))),
-    (np.arange(1, 9), 2, np.nanprod(np.arange(1, 9) ** 2)),  # test kwarg
-    (np.arange(1, 9).reshape(2, 4), 2,  # test product along 1st dimension
-     np.nanprod(np.arange(1, 9).reshape(2, 4) ** 2, axis=0)),
-    (2, 2, 4),  # test single data point
+    (np.arange(1, 9), 1, 1),
+    (np.arange(1, 9), 2, 1),  # test kwarg
+    (np.array([[0.2, 0.4], [0.1, 0.2]]), 2,
+     np.array([np.exp(-0.15), 1])),
+    (2, 2, 1),  # test single data point
 ])
 def test_combined_likelihood(data, exponent, expected):
     def likelihood_function(x, exponent=1):

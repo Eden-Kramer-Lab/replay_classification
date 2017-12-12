@@ -87,6 +87,7 @@ def poisson_log_likelihood(is_spike, conditional_intensity=None,
     '''
     probability_no_spike = -conditional_intensity * time_bin_size
     is_spike = atleast_kd(is_spike, conditional_intensity.ndim)
-    eps = np.spacing(1)
-    return (np.log(conditional_intensity + eps) * is_spike +
+    conditional_intensity[
+        np.isclose(conditional_intensity, 0.0)] = np.spacing(1)
+    return (np.log(conditional_intensity) * is_spike +
             probability_no_spike)

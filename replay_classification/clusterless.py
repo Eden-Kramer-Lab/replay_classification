@@ -19,8 +19,8 @@ from numba import jit
 def _normal_pdf(x, mean=0, std_deviation=1):
     '''Evaluate the normal probability density function at specified points.
 
-    Unlike the `scipy.norm.pdf`, this function is not general and does not
-    do any sanity checking of the inputs. As a result it is a much faster
+    Unlike the `scipy.stats.norm.pdf`, this function is not general and does
+    not do any sanity checking of the inputs. As a result it is a much faster
     function, but you should be sure of your inputs before using.
 
     This function only computes the one-dimensional pdf.

@@ -8,7 +8,7 @@ logger = getLogger(__name__)
 
 
 def fit_glm_model(spikes, design_matrix, penalty=1E-5):
-    '''Fits the Poisson model to the spikes from a neuron
+    '''Fits the Poisson model to the spikes from a neuron.
 
     Parameters
     ----------
@@ -35,7 +35,7 @@ def fit_glm_model(spikes, design_matrix, penalty=1E-5):
 def predictors_by_trajectory_direction(trajectory_direction,
                                        place_bin_centers,
                                        design_matrix):
-    '''The design matrix for a given trajectory direction
+    '''The design matrix for a given trajectory direction.
     '''
     predictors = {'position': place_bin_centers,
                   'trajectory_direction': [trajectory_direction] *
@@ -45,8 +45,9 @@ def predictors_by_trajectory_direction(trajectory_direction,
 
 
 def glm_val(fitted_model, predict_design_matrix):
-    '''Predict the model's response given a design matrix
-    and the model parameters
+    '''Predict the model's response given a design matrix and the model
+    parameters.
+
     '''
     try:
         return fitted_model.predict(predict_design_matrix)
@@ -84,8 +85,8 @@ def poisson_log_likelihood(is_spike, conditional_intensity=None,
 
     Returns
     -------
-    scaled_poisson_log_likelihood : array_like, shape (n_signals,
-                                                   n_states, n_place_bins)
+    poisson_log_likelihood : array_like, shape (n_signals, n_states,
+                                                n_place_bins)
 
     '''
     probability_no_spike = -conditional_intensity * time_bin_size

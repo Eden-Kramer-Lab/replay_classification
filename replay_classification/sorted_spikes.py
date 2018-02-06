@@ -24,9 +24,12 @@ def fit_glm_model(spikes, design_matrix, penalty=1E-5):
     '''
     model = GLM(spikes, design_matrix, family=families.Poisson(),
                 drop='missing')
-    regularization_weights = np.ones((design_matrix.shape[1],)) * penalty
-    regularization_weights[0] = 0.0
-    return model.fit_regularized(alpha=regularization_weights, L1_wt=0)
+    if penalty is None:
+        return model.fit()
+    else:
+        regularization_weights = np.ones((design_matrix.shape[1],)) * penalty
+        regularization_weights[0] = 0.0
+        return model.fit_regularized(alpha=regularization_weights, L1_wt=0)
 
 
 def predictors_by_trajectory_direction(trajectory_direction,

@@ -262,8 +262,7 @@ class ClusterlessDecoder(object):
             initial_conditions=self.initial_conditions.values,
             state_transition=self.state_transition_matrix.values,
             likelihood_function=combined_likelihood,
-            likelihood_kwargs=self._combined_likelihood_kwargs,
-            bin_size=np.diff(self.place_bin_edges)[0])
+            likelihood_kwargs=self._combined_likelihood_kwargs)
         coords = dict(
             time=(time if time is not None
                   else np.arange(results['posterior_density'].shape[0])),

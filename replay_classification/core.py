@@ -14,14 +14,12 @@ from logging import getLogger
 import numpy as np
 from scipy.ndimage.filters import gaussian_filter
 from scipy.stats import norm
-from scipy.integrate import trapz
 
 logger = getLogger(__name__)
 
 
 def predict_state(data, initial_conditions=None, state_transition=None,
-                  likelihood_function=None, likelihood_kwargs={},
-                  bin_size=1):
+                  likelihood_function=None, likelihood_kwargs={}):
     '''Adaptive filter to iteratively calculate the posterior probability
     of a state variable
 
@@ -34,7 +32,6 @@ def predict_state(data, initial_conditions=None, state_transition=None,
     likelihood_kwargs: dict, optional
         Additional arguments to the likelihood function
         besides the data
-    bin_size : state
 
     Returns
     -------
@@ -51,8 +48,7 @@ def predict_state(data, initial_conditions=None, state_transition=None,
     current_posterior = initial_conditions.copy()
 
     for time_ind in np.arange(n_time_points):
-        prior[time_ind] = _get_prior(current_posterior, state_transition,
-                                     bin_size=bin_size)
+        prior[time_ind] = _get_prior(current_posterior, state_transition)
         likelihood[time_ind] = likelihood_function(
             data[:, time_ind, ...], **likelihood_kwargs)
         posterior[time_ind] = _update_posterior(
@@ -78,12 +74,12 @@ def normalize_to_probability(distribution):
     return distribution / np.nansum(distribution)
 
 
-def _get_prior(posterior, state_transition, bin_size=1):
+def _get_prior(posterior, state_transition):
     '''The prior given the current posterior density and a transition
     matrix indicating the state at the next time step.
     '''
-    return trapz(
-        state_transition * posterior[..., np.newaxis], dx=bin_size).squeeze()
+    return np.matmul(
+        state_transition, posterior[..., np.newaxis]).squeeze()
 
 
 def scaled_likelihood(log_likelihood_func):

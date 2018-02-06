@@ -40,6 +40,8 @@ class ClusterlessDecoder(object):
     ----------
     position : ndarray, shape (n_time,)
         Position of the animal to train the model on.
+    lagged_position : ndarray, shape (n_time,)
+        Position of the animal at the previous time step
     trajectory_direction : array_like, shape (n_time,)
         Task of the animal. Element must be either
          'Inbound' or 'Outbound'.
@@ -284,7 +286,7 @@ class ClusterlessDecoder(object):
 
 class SortedSpikeDecoder(object):
 
-    def __init__(self, position, spikes, trajectory_direction,
+    def __init__(self, position, lagged_position, spikes, trajectory_direction,
                  n_position_bins=61, replay_speedup_factor=16,
                  state_names=_DEFAULT_STATE_NAMES,
                  observation_state_order=_DEFAULT_OBSERVATION_STATE_ORDER,
@@ -297,6 +299,7 @@ class SortedSpikeDecoder(object):
         Attributes
         ----------
         position : ndarray, shape (n_time,)
+        lagged_position : ndarray, shape (n_time,)
         spike : ndarray, shape (n_neurons, n_time)
         trajectory_direction : ndarray, shape (n_time,)
         n_position_bins : int, optional
@@ -310,6 +313,7 @@ class SortedSpikeDecoder(object):
 
         '''
         self.position = position
+        self.lagged_position = lagged_position
         self.trajectory_direction = trajectory_direction
         self.spikes = spikes
         self.n_position_bins = n_position_bins
@@ -356,7 +360,7 @@ class SortedSpikeDecoder(object):
 
         state_transition_by_state = {
             direction: empirical_movement_transition_matrix(
-                self.position,
+                self.position, self.lagged_position,
                 self.place_bin_edges, self.replay_speedup_factor,
                 np.in1d(self.trajectory_direction, direction))
             for direction in trajectory_directions}

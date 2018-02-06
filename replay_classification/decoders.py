@@ -58,7 +58,8 @@ class ClusterlessDecoder(object):
 
     '''
 
-    def __init__(self, position, trajectory_direction, spike_marks,
+    def __init__(self, position, lagged_position,
+                 trajectory_direction, spike_marks,
                  n_position_bins=61, mark_std_deviation=20,
                  replay_speedup_factor=16,
                  state_names=_DEFAULT_STATE_NAMES,
@@ -69,6 +70,7 @@ class ClusterlessDecoder(object):
                  place_std_deviation=None,
                  confidence_threshold=0.8):
         self.position = np.array(position)
+        self.lagged_position = np.array(lagged_position)
         self.trajectory_direction = np.array(trajectory_direction)
         self.spike_marks = np.array(spike_marks)
         self.n_position_bins = n_position_bins
@@ -131,7 +133,7 @@ class ClusterlessDecoder(object):
 
         state_transition_by_state = {
             direction: empirical_movement_transition_matrix(
-                self.position,
+                self.position, self.lagged_position,
                 self.place_bin_edges, self.replay_speedup_factor,
                 np.in1d(self.trajectory_direction, direction))
             for direction in trajectory_directions}

@@ -8,7 +8,7 @@ def simulate_time(n_samples, sampling_frequency):
 
 
 def simulate_linear_distance(time, track_height):
-    return ((track_height / 2) * np.sin(2 * np.pi * time - (np.pi) / 2) +
+    return ((track_height / 2) * np.cos(2 * np.pi * time) +
             (track_height / 2))
 
 

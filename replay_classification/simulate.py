@@ -23,8 +23,8 @@ def simulate_poisson_spikes(rate, sampling_frequency):
 
 def create_place_field(
     place_field_mean, linear_distance, sampling_frequency, is_condition=None,
-        place_field_std_deviation=12.5, max_firing_rate=10,
-        baseline_firing_rate=2):
+        place_field_std_deviation=12.5, max_firing_rate=20,
+        baseline_firing_rate=0.5):
     if is_condition is None:
         is_condition = np.ones_like(linear_distance, dtype=bool)
     field_firing_rate = norm(

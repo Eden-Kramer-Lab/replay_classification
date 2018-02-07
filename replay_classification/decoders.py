@@ -226,9 +226,10 @@ class ClusterlessDecoder(object):
         return xr.DataArray(marginalized_intensities, dims=dims,
                             coords=coords)
 
-    def plot_observation_model(self):
+    def plot_observation_model(self, sampling_frequency=1):
         marginalized_intensities = (
-            self.marginalized_intensities().sum('mark_dimension'))
+            self.marginalized_intensities().sum('mark_dimension')
+            * sampling_frequency)
         try:
             return marginalized_intensities.plot(
                 row='signal', col='state', x='position', y='marks',
@@ -423,7 +424,7 @@ class SortedSpikeDecoder(object):
                         .plot(x='position_t', y='position_t_1',
                               robust=True, **kwargs))
 
-    def plot_observation_model(self):
+    def plot_observation_model(self, sampling_frequency=1):
         conditional_intensity = self._combined_likelihood_kwargs[
             'likelihood_kwargs']['conditional_intensity']
         coords = dict(
@@ -435,7 +436,8 @@ class SortedSpikeDecoder(object):
             dims=['signal', 'state', 'position'],
             name='firing_rate').to_dataframe().reset_index()
         g = sns.FacetGrid(
-            conditional_intensity, row='signal', col='state')
+            conditional_intensity * sampling_frequency,
+            row='signal', col='state')
         return g.map(plt.plot, 'position', 'firing_rate')
 
     def predict(self, spikes, time=None):

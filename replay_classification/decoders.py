@@ -437,12 +437,12 @@ class SortedSpikeDecoder(object):
             state=self.state_names,
             position=self.place_bin_centers)
         conditional_intensity = xr.DataArray(
-            conditional_intensity,
+            conditional_intensity * sampling_frequency,
             coords=coords,
             dims=['signal', 'state', 'position'],
             name='firing_rate').to_dataframe().reset_index()
         g = sns.FacetGrid(
-            conditional_intensity * sampling_frequency,
+            conditional_intensity,
             row='signal', col='state')
         return g.map(plt.plot, 'position', 'firing_rate')
 

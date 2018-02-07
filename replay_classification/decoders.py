@@ -293,6 +293,7 @@ class SortedSpikeDecoder(object):
                  state_transition_state_order=_DEFAULT_STATE_TRANSITION_STATE_ORDER,
                  initial_conditions='Inbound-Outbound',
                  time_bin_size=1,
+                 knot_spacing=30,
                  confidence_threshold=0.8):
         '''
 
@@ -324,6 +325,7 @@ class SortedSpikeDecoder(object):
         self.initial_conditions = initial_conditions
         self.time_bin_size = time_bin_size
         self.confidence_threshold = confidence_threshold
+        self.knot_spacing = knot_spacing
 
     def fit(self):
         '''Fits the decoder model by state
@@ -376,8 +378,12 @@ class SortedSpikeDecoder(object):
             name='state_transition_probability')
 
         logger.info('Fitting observation model...')
+        min_position, max_position = (self.position.min(), self.position.max())
+        n_steps = (max_position - min_position) // self.knot_spacing
+        position_knots = min_position + (np.arange(1, n_steps)
+                                         * self.knot_spacing)
         formula = ('1 + trajectory_direction * '
-                   'cr(position, df=5, constraints="center")')
+                   'cr(position, knots=position_knots, constraints="center")')
 
         training_data = pd.DataFrame(dict(
             position=self.position,

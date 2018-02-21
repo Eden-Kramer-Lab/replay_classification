@@ -3,6 +3,7 @@ channels:
 - conda-forge
 - defaults
 - ioam
+- edeno
 dependencies:
 - "python>=3.5"
 - setuptools
@@ -11,6 +12,7 @@ dependencies:
 - pandas
 - xarray
 - statsmodels
+- regularized_glm
 - matplotlib
 - seaborn
 - patsy

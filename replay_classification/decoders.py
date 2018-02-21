@@ -390,13 +390,14 @@ class SortedSpikeDecoder(object):
             trajectory_direction=self.trajectory_direction))
         design_matrix = dmatrix(
             formula, training_data, return_type='dataframe')
-        fit = [fit_glm_model(
+        fit_coefficients = np.stack(
+            [fit_glm_model(
                 pd.DataFrame(spikes).loc[design_matrix.index], design_matrix)
-               for spikes in self.spikes]
+             for spikes in self.spikes], axis=1)
 
         ci_by_state = {
             direction: get_conditional_intensity(
-                fit, predictors_by_trajectory_direction(
+                fit_coefficients, predictors_by_trajectory_direction(
                     direction, self.place_bin_centers, design_matrix))
             for direction in trajectory_directions}
         conditional_intensity = np.stack(

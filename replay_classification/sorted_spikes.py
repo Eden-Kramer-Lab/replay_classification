@@ -2,12 +2,13 @@ from logging import getLogger
 
 import numpy as np
 from patsy import build_design_matrices
-from statsmodels.api import GLM, families
+from statsmodels.api import families
+from regularized_glm import penalized_IRLS
 
 logger = getLogger(__name__)
 
 
-def fit_glm_model(spikes, design_matrix, penalty=1E-5):
+def fit_glm_model(spikes, design_matrix, penalty=3):
     '''Fits the Poisson model to the spikes from a neuron.
 
     Parameters
@@ -22,14 +23,13 @@ def fit_glm_model(spikes, design_matrix, penalty=1E-5):
     fitted_model : statsmodel results
 
     '''
-    model = GLM(spikes, design_matrix, family=families.Poisson(),
-                drop='missing')
-    if penalty is None:
-        return model.fit()
-    else:
-        regularization_weights = np.ones((design_matrix.shape[1],)) * penalty
-        regularization_weights[0] = 0.0
-        return model.fit_regularized(alpha=regularization_weights, L1_wt=0)
+    regularization_weights = np.ones((design_matrix.shape[1],)) * penalty
+    regularization_weights[0] = 0.0
+    return np.squeeze(
+        penalized_IRLS(
+            np.array(design_matrix), np.array(spikes),
+            family=families.Poisson(),
+            penalty=regularization_weights).coefficients)
 
 
 def predictors_by_trajectory_direction(trajectory_direction,
@@ -44,22 +44,10 @@ def predictors_by_trajectory_direction(trajectory_direction,
         [design_matrix.design_info], predictors)[0]
 
 
-def glm_val(fitted_model, predict_design_matrix):
-    '''Predict the model's response given a design matrix and the model
-    parameters.
-
-    '''
-    try:
-        return fitted_model.predict(predict_design_matrix)
-    except AttributeError:
-        return np.full(predict_design_matrix.shape[0], np.nan)
-
-
-def get_conditional_intensity(fit, predict_design_matrix):
+def get_conditional_intensity(fit_coefficients, predict_design_matrix):
     '''The conditional intensity for each model
     '''
-    return [glm_val(fitted_model, predict_design_matrix)
-            for fitted_model in fit]
+    return np.exp(np.dot(predict_design_matrix, fit_coefficients)).T
 
 
 def atleast_kd(array, k):

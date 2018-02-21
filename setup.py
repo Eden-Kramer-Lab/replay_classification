@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 INSTALL_REQUIRES = ['numpy >= 1.11', 'pandas >= 0.18.0', 'scipy', 'xarray',
                     'statsmodels', 'matplotlib', 'numba', 'patsy', 'seaborn',
-                    'holoviews', 'bokeh']
+                    'holoviews', 'bokeh', 'regularized_glm']
 TESTS_REQUIRE = ['pytest >= 2.7.1']
 
 setup(

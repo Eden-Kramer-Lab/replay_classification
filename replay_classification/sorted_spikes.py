@@ -1,9 +1,11 @@
 from logging import getLogger
 
 import numpy as np
+import pandas as pd
 from patsy import build_design_matrices
 from statsmodels.api import families
 from regularized_glm import penalized_IRLS
+from patsy import dmatrix
 
 logger = getLogger(__name__)
 
@@ -83,3 +85,33 @@ def poisson_log_likelihood(is_spike, conditional_intensity=None,
         np.isclose(conditional_intensity, 0.0)] = np.spacing(1)
     return (np.log(conditional_intensity) * is_spike +
             probability_no_spike)
+
+
+def fit_spike_observation_model(position, trajectory_direction, spikes,
+                                place_bin_centers, trajectory_directions,
+                                knot_spacing, observation_state_order):
+    min_position, max_position = (position.min(), position.max())
+    n_steps = (max_position - min_position) // knot_spacing
+    position_knots = min_position + (np.arange(1, n_steps)
+                                     * knot_spacing)
+    formula = ('1 + trajectory_direction * '
+               'cr(position, knots=position_knots, constraints="center")')
+
+    training_data = pd.DataFrame(dict(
+        position=position,
+        trajectory_direction=trajectory_direction))
+    design_matrix = dmatrix(
+        formula, training_data, return_type='dataframe')
+    fit_coefficients = np.stack(
+        [fit_glm_model(
+            pd.DataFrame(s).loc[design_matrix.index], design_matrix)
+         for s in spikes], axis=1)
+
+    ci_by_state = {
+        direction: get_conditional_intensity(
+            fit_coefficients, predictors_by_trajectory_direction(
+                direction, place_bin_centers, design_matrix))
+        for direction in trajectory_directions}
+    return np.stack(
+        [ci_by_state[state] for state in observation_state_order],
+        axis=1)

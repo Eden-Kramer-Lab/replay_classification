@@ -5,20 +5,17 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import xarray as xr
-from patsy import dmatrix
 
 import holoviews as hv
 
-from .clusterless import (build_joint_mark_intensity,
-                          estimate_ground_process_intensity,
-                          estimate_marginalized_joint_mark_intensity,
-                          poisson_mark_log_likelihood)
-from .core import (combined_likelihood, empirical_movement_transition_matrix,
+from .clusterless import (fit_clusterless_observation_model,
+                          poisson_mark_log_likelihood,
+                          estimate_marginalized_joint_mark_intensity)
+from .core import (combined_likelihood,
                    get_bin_centers, inbound_outbound_initial_conditions,
                    predict_state, uniform_initial_conditions)
-from .sorted_spikes import (fit_glm_model, get_conditional_intensity,
-                            poisson_log_likelihood,
-                            predictors_by_trajectory_direction)
+from .sorted_spikes import fit_spike_observation_model, poisson_log_likelihood
+from .state_transition import fit_state_transition
 
 logger = getLogger(__name__)
 
@@ -132,53 +129,20 @@ class ClusterlessDecoder(object):
             name='probability')
 
         logger.info('Fitting state transition model...')
-
-        state_transition_by_state = {
-            direction: empirical_movement_transition_matrix(
-                self.position, self.lagged_position,
-                self.place_bin_edges, self.replay_speedup_factor,
-                np.in1d(self.trajectory_direction, direction))
-            for direction in trajectory_directions}
-        state_transition_matrix = np.stack(
-            [state_transition_by_state[state]
-             for state in self.state_transition_state_order])
-        self.state_transition_matrix = xr.DataArray(
-            state_transition_matrix,
-            dims=['state', 'position_t', 'position_t_1'],
-            coords=dict(state=self.state_names,
-                        position_t=self.place_bin_centers,
-                        position_t_1=self.place_bin_centers),
-            name='state_transition_probability')
+        self.state_transition_matrix = fit_state_transition(
+            self.position, self.lagged_position, self.place_bin_edges,
+            self.place_bin_centers, self.trajectory_direction,
+            trajectory_directions, self.replay_speedup_factor,
+            self.state_transition_state_order, self.state_names)
 
         logger.info('Fitting observation model...')
-        joint_mark_intensity_functions = []
-        ground_process_intensity = []
+        joint_mark_intensity_functions, ground_process_intensity = (
+            fit_clusterless_observation_model(
+                self.position, self.trajectory_direction, self.spike_marks,
+                self.place_bin_centers, trajectory_directions,
+                self.place_std_deviation, self.mark_std_deviation,
+                self.observation_state_order))
 
-        for marks in self.spike_marks:
-            jmi_by_state = {
-                direction: build_joint_mark_intensity(
-                    self.position[
-                        np.in1d(self.trajectory_direction, direction)],
-                    marks[np.in1d(self.trajectory_direction, direction)],
-                    self.place_bin_centers, self.place_std_deviation,
-                    self.mark_std_deviation)
-                for direction in trajectory_directions}
-            joint_mark_intensity_functions.append(
-                [jmi_by_state[state]
-                 for state in self.observation_state_order])
-
-            gpi_by_state = {
-                direction: estimate_ground_process_intensity(
-                    self.position[
-                        np.in1d(self.trajectory_direction, direction)],
-                    marks[np.in1d(self.trajectory_direction, direction)],
-                    self.place_bin_centers, self.place_std_deviation)
-                for direction in trajectory_directions}
-            ground_process_intensity.append(
-                [gpi_by_state[state]
-                 for state in self.observation_state_order])
-
-        ground_process_intensity = np.stack(ground_process_intensity)
         likelihood_kwargs = dict(
             joint_mark_intensity_functions=joint_mark_intensity_functions,
             ground_process_intensity=ground_process_intensity,
@@ -359,54 +323,21 @@ class SortedSpikeDecoder(object):
             name='probability')
 
         logger.info('Fitting state transition model...')
-
-        state_transition_by_state = {
-            direction: empirical_movement_transition_matrix(
-                self.position, self.lagged_position,
-                self.place_bin_edges, self.replay_speedup_factor,
-                np.in1d(self.trajectory_direction, direction))
-            for direction in trajectory_directions}
-        state_transition_matrix = np.stack(
-            [state_transition_by_state[state]
-             for state in self.state_transition_state_order])
-        self.state_transition_matrix = xr.DataArray(
-            state_transition_matrix,
-            dims=['state', 'position_t', 'position_t_1'],
-            coords=dict(state=self.state_names,
-                        position_t=self.place_bin_centers,
-                        position_t_1=self.place_bin_centers),
-            name='state_transition_probability')
+        self.state_transition_matrix = fit_state_transition(
+            self.position, self.lagged_position, self.place_bin_edges,
+            self.place_bin_centers, self.trajectory_direction,
+            trajectory_directions, self.replay_speedup_factor,
+            self.state_transition_state_order, self.state_names)
 
         logger.info('Fitting observation model...')
-        min_position, max_position = (self.position.min(), self.position.max())
-        n_steps = (max_position - min_position) // self.knot_spacing
-        position_knots = min_position + (np.arange(1, n_steps)
-                                         * self.knot_spacing)
-        formula = ('1 + trajectory_direction * '
-                   'cr(position, knots=position_knots, constraints="center")')
+        conditional_intensity = fit_spike_observation_model(
+            self.position, self.trajectory_direction, self.spikes,
+            self.place_bin_centers, trajectory_directions,
+            self.knot_spacing, self.observation_state_order)
 
-        training_data = pd.DataFrame(dict(
-            position=self.position,
-            trajectory_direction=self.trajectory_direction))
-        design_matrix = dmatrix(
-            formula, training_data, return_type='dataframe')
-        fit_coefficients = np.stack(
-            [fit_glm_model(
-                pd.DataFrame(spikes).loc[design_matrix.index], design_matrix)
-             for spikes in self.spikes], axis=1)
-
-        ci_by_state = {
-            direction: get_conditional_intensity(
-                fit_coefficients, predictors_by_trajectory_direction(
-                    direction, self.place_bin_centers, design_matrix))
-            for direction in trajectory_directions}
-        conditional_intensity = np.stack(
-            [ci_by_state[state] for state in self.observation_state_order],
-            axis=1)
         self._combined_likelihood_kwargs = dict(
             log_likelihood_function=poisson_log_likelihood,
-            likelihood_kwargs=dict(
-                conditional_intensity=conditional_intensity)
+            likelihood_kwargs=dict(conditional_intensity=conditional_intensity)
         )
 
         return self

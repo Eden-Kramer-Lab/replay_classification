@@ -283,3 +283,40 @@ def estimate_marginalized_joint_mark_intensity(
         mark_std_deviation)
     return (np.dot(place_field, mark_at_spike) /
             place_occupancy[:, np.newaxis, np.newaxis])
+
+
+def fit_clusterless_observation_model(position, trajectory_direction,
+                                      spike_marks, place_bin_centers,
+                                      trajectory_directions,
+                                      place_std_deviation, mark_std_deviation,
+                                      observation_state_order):
+    joint_mark_intensity_functions = []
+    ground_process_intensity = []
+
+    for marks in spike_marks:
+        jmi_by_state = {
+            direction: build_joint_mark_intensity(
+                position[
+                    np.in1d(trajectory_direction, direction)],
+                marks[np.in1d(trajectory_direction, direction)],
+                place_bin_centers, place_std_deviation,
+                mark_std_deviation)
+            for direction in trajectory_directions}
+        joint_mark_intensity_functions.append(
+            [jmi_by_state[state]
+             for state in observation_state_order])
+
+        gpi_by_state = {
+            direction: estimate_ground_process_intensity(
+                position[
+                    np.in1d(trajectory_direction, direction)],
+                marks[np.in1d(trajectory_direction, direction)],
+                place_bin_centers, place_std_deviation)
+            for direction in trajectory_directions}
+        ground_process_intensity.append(
+            [gpi_by_state[state]
+             for state in observation_state_order])
+
+    ground_process_intensity = np.stack(ground_process_intensity)
+
+    return joint_mark_intensity_functions, ground_process_intensity

@@ -49,7 +49,9 @@ def predictors_by_trajectory_direction(trajectory_direction,
 def get_conditional_intensity(fit_coefficients, predict_design_matrix):
     '''The conditional intensity for each model
     '''
-    return np.exp(np.dot(predict_design_matrix, fit_coefficients)).T
+    intensity = np.exp(np.dot(predict_design_matrix, fit_coefficients)).T
+    intensity[np.isnan(intensity)] = np.spacing(1)
+    return intensity
 
 
 def atleast_kd(array, k):

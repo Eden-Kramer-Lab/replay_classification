@@ -1,6 +1,8 @@
 # replay_classification
 [![Coverage Status](https://coveralls.io/repos/github/Eden-Kramer-Lab/replay_classification/badge.svg?branch=master)](https://coveralls.io/github/Eden-Kramer-Lab/replay_classification?branch=master) [![DOI](https://zenodo.org/badge/104356770.svg)](https://zenodo.org/badge/latestdoi/104356770)
 
+[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/Eden-Kramer-Lab/replay_classification/master)
+
 `replay_classification` is a python package for categorizing hippocampal replay events using multiunit spiking activity. Multiunit spiking activity can be more informative than sorted spikes, because there is no need to distinguish between neurons. This has several advantages:
 1. We can take advantage of partial information from neurons that are not well separated in terms of electrophysiological signal.
 2. Saves time, because no spike-sorting step is necessary.

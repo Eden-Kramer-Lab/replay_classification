@@ -132,11 +132,7 @@ class ClusterlessDecoder(object):
             name='probability')
 
         logger.info('Fitting state transition model...')
-        self.state_transition_matrix = fit_state_transition(
-            self.position, self.lagged_position, self.place_bin_edges,
-            self.place_bin_centers, self.trajectory_direction,
-            trajectory_directions, self.replay_speedup_factor,
-            self.state_transition_state_order, self.state_names)
+        self.fit_state_transition(self.replay_speedup_factor)
 
         logger.info('Fitting observation model...')
         joint_mark_intensity_functions, ground_process_intensity = (
@@ -156,6 +152,17 @@ class ClusterlessDecoder(object):
             likelihood_kwargs=likelihood_kwargs)
 
         return self
+
+    def fit_state_transition(self, replay_speedup_factor=1):
+        logger.info('Fitting state transition model...')
+        trajectory_directions = np.unique(
+            self.trajectory_direction[pd.notnull(self.trajectory_direction)])
+        self.replay_speedup_factor = replay_speedup_factor
+        self.state_transition_matrix = fit_state_transition(
+            self.position, self.lagged_position, self.place_bin_edges,
+            self.place_bin_centers, self.trajectory_direction,
+            trajectory_directions, self.replay_speedup_factor,
+            self.state_transition_state_order, self.state_names)
 
     def plot_initial_conditions(self, **kwargs):
         return (
@@ -328,12 +335,7 @@ class SortedSpikeDecoder(object):
                         state=self.state_names),
             name='probability')
 
-        logger.info('Fitting state transition model...')
-        self.state_transition_matrix = fit_state_transition(
-            self.position, self.lagged_position, self.place_bin_edges,
-            self.place_bin_centers, self.trajectory_direction,
-            trajectory_directions, self.replay_speedup_factor,
-            self.state_transition_state_order, self.state_names)
+        self.fit_state_transition(self.replay_speedup_factor)
 
         logger.info('Fitting observation model...')
         conditional_intensity = fit_spike_observation_model(
@@ -347,6 +349,17 @@ class SortedSpikeDecoder(object):
         )
 
         return self
+
+    def fit_state_transition(self, replay_speedup_factor=1):
+        logger.info('Fitting state transition model...')
+        trajectory_directions = np.unique(
+            self.trajectory_direction[pd.notnull(self.trajectory_direction)])
+        self.replay_speedup_factor = replay_speedup_factor
+        self.state_transition_matrix = fit_state_transition(
+            self.position, self.lagged_position, self.place_bin_edges,
+            self.place_bin_centers, self.trajectory_direction,
+            trajectory_directions, self.replay_speedup_factor,
+            self.state_transition_state_order, self.state_names)
 
     def save_model():
         raise NotImplementedError

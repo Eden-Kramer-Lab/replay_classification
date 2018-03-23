@@ -83,6 +83,9 @@ class ClusterlessDecoder(object):
         self.place_std_deviation = place_std_deviation
         self.confidence_threshold = confidence_threshold
 
+    def __dir__(self):
+        return self.keys()
+
     def fit(self):
         '''Fits the decoder model for each trajectory_direction.
 
@@ -290,6 +293,9 @@ class SortedSpikeDecoder(object):
         self.time_bin_size = time_bin_size
         self.confidence_threshold = confidence_threshold
         self.knot_spacing = knot_spacing
+
+    def __dir__(self):
+        return self.keys()
 
     def fit(self):
         '''Fits the decoder model by state

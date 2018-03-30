@@ -8,6 +8,8 @@ import xarray as xr
 
 import holoviews as hv
 
+from sklearn.neighbors import KernelDensity
+
 from .clusterless import (fit_clusterless_observation_model,
                           poisson_mark_log_likelihood,
                           estimate_marginalized_joint_mark_intensity)
@@ -65,6 +67,8 @@ class ClusterlessDecoder(object):
                  observation_state_order=_DEFAULT_OBSERVATION_STATE_ORDER,
                  state_transition_state_order=_DEFAULT_STATE_TRANSITION_STATE_ORDER,
                  initial_conditions='Inbound-Outbound',
+                 model=KernelDensity,
+                 model_kwargs=dict(bandwidth=10),
                  time_bin_size=1,
                  place_std_deviation=None,
                  confidence_threshold=0.8):
@@ -82,6 +86,8 @@ class ClusterlessDecoder(object):
         self.time_bin_size = time_bin_size
         self.place_std_deviation = place_std_deviation
         self.confidence_threshold = confidence_threshold
+        self.model = model
+        self.model_kwargs = model_kwargs
 
     def __dir__(self):
         return self.keys()
@@ -138,8 +144,7 @@ class ClusterlessDecoder(object):
         joint_mark_intensity_functions, ground_process_intensity = (
             fit_clusterless_observation_model(
                 self.position, self.trajectory_direction, self.spike_marks,
-                self.place_bin_centers, trajectory_directions,
-                self.place_std_deviation, self.mark_std_deviation,
+                self.place_bin_centers, self.model, self.model_kwargs,
                 self.observation_state_order))
 
         likelihood_kwargs = dict(
@@ -178,39 +183,8 @@ class ClusterlessDecoder(object):
                         .plot(x='position_t', y='position_t_1',
                               robust=True, **kwargs))
 
-    def marginalized_intensities(self):
-        joint_mark_intensity_functions = (
-            self._combined_likelihood_kwargs['likelihood_kwargs']
-            ['joint_mark_intensity_functions'])
-        mark_bin_centers = np.linspace(100, 350, 200)
-
-        marginalized_intensities = np.stack(
-            [[estimate_marginalized_joint_mark_intensity(
-                mark_bin_centers, jmi.keywords['training_marks'],
-                jmi.keywords['place_field'],
-                jmi.keywords['place_occupancy'], self.mark_std_deviation)
-              for jmi in tetrode]
-             for tetrode in joint_mark_intensity_functions])
-        dims = ['signal', 'state', 'position', 'marks', 'mark_dimension']
-        coords = dict(
-            state=self.state_names,
-            marks=mark_bin_centers,
-            position=self.place_bin_centers
-        )
-        return xr.DataArray(marginalized_intensities, dims=dims,
-                            coords=coords)
-
     def plot_observation_model(self, sampling_frequency=1):
-        marginalized_intensities = (
-            self.marginalized_intensities().sum('mark_dimension')
-            * sampling_frequency)
-        try:
-            return marginalized_intensities.plot(
-                row='signal', col='state', x='position', y='marks',
-                robust=True)
-        except ValueError:
-            return marginalized_intensities.plot(
-                row='signal', x='position', y='marks', robust=True)
+        raise NotImplementedError
 
     def save_model():
         raise NotImplementedError

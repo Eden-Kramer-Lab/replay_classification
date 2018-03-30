@@ -46,6 +46,7 @@ def predict_state(data, initial_conditions=None, state_transition=None,
     prior = np.zeros(shape)
 
     current_posterior = initial_conditions.copy()
+    likelihood = likelihood_function(data, **likelihood_kwargs)
 
     for time_ind in np.arange(n_time_points):
         prior[time_ind] = _get_prior(current_posterior, state_transition)
@@ -102,7 +103,9 @@ def scaled_likelihood(log_likelihood_func):
     @wraps(log_likelihood_func)
     def decorated_function(*args, **kwargs):
         log_likelihood = log_likelihood_func(*args, **kwargs)
-        return np.exp(log_likelihood - np.max(log_likelihood))
+        axis = tuple(range(log_likelihood.ndim)[1:])
+        return np.exp(log_likelihood - np.max(
+            log_likelihood, axis=axis, keepdims=True))
 
     return decorated_function
 
@@ -127,15 +130,13 @@ def combined_likelihood(data, log_likelihood_function=None,
 
     Returns
     -------
-    likelihood : array_like, shape=(n_parameters * n_states,)
+    likelihood : array_like, shape=(n_time, n_states, n_parameters)
 
     '''
     try:
         return np.sum(
-            log_likelihood_function(data, **likelihood_kwargs),
-            axis=0).squeeze()
+            log_likelihood_function(data, **likelihood_kwargs), axis=0)
     except ValueError:
-        return log_likelihood_function(data, **likelihood_kwargs).squeeze()
 
 
 def empirical_movement_transition_matrix(place, lagged_place, place_bin_edges,
@@ -196,6 +197,7 @@ def _fix_zero_bins(movement_bins):
     '''
     movement_bins[:, movement_bins.sum(axis=0) == 0] = 1
     return movement_bins
+        return log_likelihood_function(data, **likelihood_kwargs)
 
 
 def get_bin_centers(bin_edges):

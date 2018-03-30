@@ -92,7 +92,7 @@ def poisson_log_likelihood(is_spike, conditional_intensity=None,
 def fit_spike_observation_model(position, trajectory_direction, spikes,
                                 place_bin_centers, trajectory_directions,
                                 knot_spacing, observation_state_order):
-    min_position, max_position = (position.min(), position.max())
+    min_position, max_position = np.nanmin(position), np.nanmax(position)
     n_steps = (max_position - min_position) // knot_spacing
     position_knots = min_position + (np.arange(1, n_steps)
                                      * knot_spacing)

@@ -10,6 +10,7 @@ References
 '''
 from functools import wraps
 from logging import getLogger
+from numba import jit
 
 import numpy as np
 from scipy.stats import norm
@@ -17,6 +18,7 @@ from scipy.stats import norm
 logger = getLogger(__name__)
 
 
+@jit(no_python=True)
 def predict_state(initial_conditions=None, state_transition=None,
                   likelihood=None):
     '''Adaptive filter to iteratively calculate the posterior probability

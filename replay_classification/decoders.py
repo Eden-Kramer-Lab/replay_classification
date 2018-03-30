@@ -357,7 +357,7 @@ class SortedSpikeDecoder(object):
 
     def plot_observation_model(self, sampling_frequency=1):
         conditional_intensity = self._combined_likelihood_kwargs[
-            'likelihood_kwargs']['conditional_intensity']
+            'likelihood_kwargs']['conditional_intensity'].squeeze()
         coords = dict(
             state=self.state_names,
             position=self.place_bin_centers)
@@ -386,7 +386,7 @@ class SortedSpikeDecoder(object):
 
         '''
         results = predict_state(
-            spikes,
+            spikes[..., np.newaxis, np.newaxis],
             initial_conditions=self.initial_conditions.values,
             state_transition=self.state_transition_matrix.values,
             likelihood_function=combined_likelihood,

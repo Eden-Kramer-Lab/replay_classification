@@ -111,6 +111,8 @@ def fit_spike_observation_model(position, trajectory_direction, spikes,
             fit_coefficients, predictors_by_trajectory_direction(
                 direction, place_bin_centers, design_matrix))
         for direction in trajectory_directions}
-    return np.stack(
+
+    conditional_intensity = np.stack(
         [ci_by_state[state] for state in observation_state_order],
         axis=1)
+    return conditional_intensity[:, np.newaxis, ...]

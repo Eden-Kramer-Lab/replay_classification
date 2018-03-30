@@ -136,7 +136,6 @@ class ClusterlessDecoder(object):
                         state=self.state_names),
             name='probability')
 
-        logger.info('Fitting state transition model...')
         self.fit_state_transition(self.replay_speedup_factor)
 
         logger.info('Fitting observation model...')

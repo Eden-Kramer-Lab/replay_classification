@@ -11,8 +11,7 @@ import holoviews as hv
 from sklearn.neighbors import KernelDensity
 
 from .clusterless import (fit_clusterless_observation_model,
-                          poisson_mark_log_likelihood,
-                          estimate_marginalized_joint_mark_intensity)
+                          poisson_mark_log_likelihood)
 from .core import (combined_likelihood,
                    get_bin_centers, inbound_outbound_initial_conditions,
                    predict_state, uniform_initial_conditions)

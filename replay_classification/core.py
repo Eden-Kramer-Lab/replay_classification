@@ -49,8 +49,6 @@ def predict_state(data, initial_conditions=None, state_transition=None,
 
     for time_ind in np.arange(n_time_points):
         prior[time_ind] = _get_prior(current_posterior, state_transition)
-        likelihood[time_ind] = likelihood_function(
-            data[:, time_ind, ...], **likelihood_kwargs)
         posterior[time_ind] = _update_posterior(
             prior[time_ind], likelihood[time_ind])
         current_posterior = posterior[time_ind].copy()

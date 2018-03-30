@@ -17,8 +17,8 @@ from scipy.stats import norm
 logger = getLogger(__name__)
 
 
-def predict_state(data, initial_conditions=None, state_transition=None,
-                  likelihood_function=None, likelihood_kwargs={}):
+def predict_state(initial_conditions=None, state_transition=None,
+                  likelihood=None):
     '''Adaptive filter to iteratively calculate the posterior probability
     of a state variable
 
@@ -38,16 +38,14 @@ def predict_state(data, initial_conditions=None, state_transition=None,
                                         n_parameters)
 
     '''
-    n_time_points = data.shape[1]
-    shape = (n_time_points, *initial_conditions.shape)
+    n_time = likelihood.shape[0]
+    shape = (n_time, *initial_conditions.shape)
     posterior = np.zeros(shape)
-    likelihood = np.zeros(shape)
     prior = np.zeros(shape)
 
     current_posterior = initial_conditions.copy()
-    likelihood = likelihood_function(data, **likelihood_kwargs)
 
-    for time_ind in np.arange(n_time_points):
+    for time_ind in np.arange(n_time):
         prior[time_ind] = _get_prior(current_posterior, state_transition)
         posterior[time_ind] = _update_posterior(
             prior[time_ind], likelihood[time_ind])

@@ -204,12 +204,12 @@ class ClusterlessDecoder(object):
         predicted_state : str
 
         '''
+        likelihood = combined_likelihood(
+            spike_marks, **self._combined_likelihood_kwargs)
         results = predict_state(
-            spike_marks,
             initial_conditions=self.initial_conditions.values,
             state_transition=self.state_transition_matrix.values,
-            likelihood_function=combined_likelihood,
-            likelihood_kwargs=self._combined_likelihood_kwargs)
+            likelihood=likelihood)
         coords = dict(
             time=(time if time is not None
                   else np.arange(results['posterior_density'].shape[0])),
@@ -383,12 +383,13 @@ class SortedSpikeDecoder(object):
         predicted_state : str
 
         '''
-        results = predict_state(
+        likelihood = combined_likelihood(
             spikes[..., np.newaxis, np.newaxis],
+            **self._combined_likelihood_kwargs)
+        results = predict_state(
             initial_conditions=self.initial_conditions.values,
             state_transition=self.state_transition_matrix.values,
-            likelihood_function=combined_likelihood,
-            likelihood_kwargs=self._combined_likelihood_kwargs)
+            likelihood=likelihood)
         coords = dict(
             time=(time if time is not None
                   else np.arange(results['posterior_density'].shape[0])),

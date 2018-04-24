@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import xarray as xr
+from sklearn.externals import joblib
 
 import holoviews as hv
 
@@ -184,11 +185,12 @@ class ClusterlessDecoder(object):
     def plot_observation_model(self, sampling_frequency=1):
         raise NotImplementedError
 
-    def save_model():
-        raise NotImplementedError
+    def save_model(self, filename='model.pkl'):
+        joblib.dump(self, filename)
 
-    def load_model():
-        raise NotImplementedError
+    @staticmethod
+    def load_model(filename='model.pkl'):
+        return joblib.load(filename)
 
     def predict(self, spike_marks, time=None):
         '''Predicts the state from spike_marks.
@@ -333,11 +335,12 @@ class SortedSpikeDecoder(object):
             trajectory_directions, self.replay_speedup_factor,
             self.state_transition_state_order, self.state_names)
 
-    def save_model():
-        raise NotImplementedError
+    def save_model(self, filename='model.pkl'):
+        joblib.dump(self, filename)
 
-    def load_model():
-        raise NotImplementedError
+    @staticmethod
+    def load_model(filename='model.pkl'):
+        return joblib.load(filename)
 
     def plot_initial_conditions(self, **kwargs):
         return (

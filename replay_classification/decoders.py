@@ -6,16 +6,15 @@ import pandas as pd
 import seaborn as sns
 import xarray as xr
 from sklearn.externals import joblib
+from sklearn.neighbors import KernelDensity
 
 import holoviews as hv
 
-from sklearn.neighbors import KernelDensity
-
-from .clusterless import (fit_clusterless_observation_model,
-                          poisson_mark_log_likelihood)
-from .core import (combined_likelihood,
-                   get_bin_centers, inbound_outbound_initial_conditions,
-                   predict_state, uniform_initial_conditions)
+from .core import (combined_likelihood, get_bin_centers,
+                   inbound_outbound_initial_conditions, predict_state,
+                   uniform_initial_conditions)
+from .multiunit import (fit_multiunit_observation_model,
+                        poisson_mark_log_likelihood)
 from .sorted_spikes import fit_spike_observation_model, poisson_log_likelihood
 from .state_transition import fit_state_transition
 
@@ -141,7 +140,7 @@ class ClusterlessDecoder(object):
 
         logger.info('Fitting observation model...')
         joint_mark_intensity_functions, ground_process_intensity = (
-            fit_clusterless_observation_model(
+            fit_multiunit_observation_model(
                 self.position, self.trajectory_direction, self.spike_marks,
                 self.place_bin_centers, self.model, self.model_kwargs,
                 self.observation_state_order))
@@ -418,6 +417,9 @@ class DecodingResults():
         self.results = results
         self.spikes = spikes
         self.confidence_threshold = confidence_threshold
+
+    def __dir__(self):
+        return self.keys()
 
     def state_probability(self):
         return (self.results['posterior_density'].sum('position')

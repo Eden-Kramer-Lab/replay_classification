@@ -106,10 +106,10 @@ def build_joint_mark_intensity(
                    mean_rate=mean_rate)
 
 
-def fit_clusterless_observation_model(position, trajectory_direction,
-                                      spike_marks, place_bin_centers,
-                                      model, model_kwargs,
-                                      observation_state_order):
+def fit_multiunit_observation_model(position, trajectory_direction,
+                                    spike_marks, place_bin_centers,
+                                    model, model_kwargs,
+                                    observation_state_order):
     joint_mark_intensity_functions = []
     ground_process_intensity = []
 

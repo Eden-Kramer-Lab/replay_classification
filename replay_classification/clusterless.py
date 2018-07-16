@@ -70,6 +70,7 @@ def poisson_mark_log_likelihood(marks, joint_mark_intensity_functions=None,
         [[jmi(signal_marks) for jmi in jmi_by_state]
          for signal_marks, jmi_by_state
          in zip(marks, joint_mark_intensity_functions)])
+    joint_mark_intensity += np.spacing(1)
     return np.log(joint_mark_intensity) + probability_no_spike
 
 

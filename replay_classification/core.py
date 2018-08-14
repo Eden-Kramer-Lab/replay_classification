@@ -18,7 +18,6 @@ from scipy.stats import norm
 logger = getLogger(__name__)
 
 
-@jit(no_python=True)
 def predict_state(initial_conditions, state_transition, likelihood):
     '''Adaptive filter to iteratively calculate the posterior probability
     of a state variable

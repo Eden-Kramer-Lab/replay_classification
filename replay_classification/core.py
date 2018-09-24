@@ -10,7 +10,6 @@ References
 '''
 from functools import wraps
 from logging import getLogger
-from numba import jit
 
 import numpy as np
 from scipy.stats import norm

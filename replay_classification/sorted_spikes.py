@@ -7,6 +7,19 @@ from statsmodels.api import families
 from regularized_glm import penalized_IRLS
 from patsy import dmatrix
 
+try:
+    from IPython import get_ipython
+
+    if 'IPKernelApp' in get_ipython().config:
+        from tqdm import tqdm_notebook as tqdm
+    else:
+        from tqdm import tqdm
+except ImportError:
+    def tqdm(*args, **kwargs):
+        if args:
+            return args[0]
+        return kwargs.get('iterable', None)
+
 logger = getLogger(__name__)
 
 
@@ -105,7 +118,7 @@ def fit_spike_observation_model(position, trajectory_direction, spikes,
     fit_coefficients = np.stack(
         [fit_glm_model(
             pd.DataFrame(s).loc[design_matrix.index], design_matrix)
-         for s in spikes], axis=1)
+         for s in tqdm(spikes, desc='neurons')], axis=1)
 
     ci_by_state = {
         direction: get_conditional_intensity(

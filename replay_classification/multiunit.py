@@ -14,6 +14,19 @@ from functools import partial
 import numpy as np
 import pandas as pd
 
+try:
+    from IPython import get_ipython
+
+    if 'IPKernelApp' in get_ipython().config:
+        from tqdm import tqdm_notebook as tqdm
+    else:
+        from tqdm import tqdm
+except ImportError:
+    def tqdm(*args, **kwargs):
+        if args:
+            return args[0]
+        return kwargs.get('iterable', None)
+
 
 def poisson_mark_log_likelihood(marks, joint_mark_intensity_functions=None,
                                 ground_process_intensity=None,
@@ -44,7 +57,7 @@ def poisson_mark_log_likelihood(marks, joint_mark_intensity_functions=None,
     joint_mark_intensity = np.stack(
         [np.stack([jmi(signal_marks) for jmi in jmi_by_state], axis=-2)
          for signal_marks, jmi_by_state
-         in zip(marks, joint_mark_intensity_functions)])
+         in zip(tqdm(marks, 'electrodes'), joint_mark_intensity_functions)])
     joint_mark_intensity += np.spacing(1)
     return np.log(joint_mark_intensity) + probability_no_spike
 
@@ -118,7 +131,7 @@ def fit_multiunit_observation_model(position, trajectory_direction,
     trajectory_directions = np.unique(
         trajectory_direction[pd.notnull(trajectory_direction)])
 
-    for marks in spike_marks:
+    for marks in tqdm(spike_marks, desc='electrodes'):
         jmi_by_state = {
             direction: build_joint_mark_intensity(
                 position[

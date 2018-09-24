@@ -60,7 +60,7 @@ class ClusterlessDecoder(object):
 
     def __init__(self, position, lagged_position,
                  trajectory_direction, spike_marks,
-                 n_position_bins=61, mark_std_deviation=20,
+                 n_position_bins=61,
                  replay_speedup_factor=16,
                  state_names=_DEFAULT_STATE_NAMES,
                  observation_state_order=_DEFAULT_OBSERVATION_STATE_ORDER,
@@ -69,21 +69,18 @@ class ClusterlessDecoder(object):
                  model=KernelDensity,
                  model_kwargs=dict(bandwidth=10),
                  time_bin_size=1,
-                 place_std_deviation=None,
                  confidence_threshold=0.8):
         self.position = np.array(position)
         self.lagged_position = np.array(lagged_position)
         self.trajectory_direction = np.array(trajectory_direction)
         self.spike_marks = np.array(spike_marks)
         self.n_position_bins = n_position_bins
-        self.mark_std_deviation = mark_std_deviation
         self.replay_speedup_factor = replay_speedup_factor
         self.state_names = state_names
         self.observation_state_order = observation_state_order
         self.state_transition_state_order = state_transition_state_order
         self.initial_conditions = initial_conditions
         self.time_bin_size = time_bin_size
-        self.place_std_deviation = place_std_deviation
         self.confidence_threshold = confidence_threshold
         self.model = model
         self.model_kwargs = model_kwargs
@@ -109,10 +106,7 @@ class ClusterlessDecoder(object):
         self.place_bin_edges = np.linspace(
             self.position.min(), self.position.max(),
             self.n_position_bins + 1)
-        if self.place_std_deviation is None:
-            self.place_std_deviation = (
-                (self.position.max() - self.position.min()) /
-                self.n_position_bins)
+
         self.place_bin_centers = get_bin_centers(self.place_bin_edges)
 
         trajectory_directions = np.unique(

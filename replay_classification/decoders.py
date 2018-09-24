@@ -379,6 +379,7 @@ class SortedSpikeDecoder(object):
         predicted_state : str
 
         '''
+        logger.info('Predicting replay type...')
         likelihood = combined_likelihood(
             spikes[..., np.newaxis, np.newaxis],
             **self._combined_likelihood_kwargs)

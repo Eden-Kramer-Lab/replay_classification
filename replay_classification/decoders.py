@@ -236,13 +236,14 @@ class SortedSpikeDecoder(object):
 
         Attributes
         ----------
-        n_position_bins : int, optional
+        n_place_bins : None or int, optional
+        place_bin_size : None or int, optional
         replay_speedup_factor : int, optional
+        state_names : list of str, optional
         observation_state_order : list of str, optional
         state_transition_state_order : list of str, optional
-        initial_conditions : 'Inbound-Outbound' | 'Uniform' | dict of array,
-            optional
         time_bin_size : float, optional
+        knot_spacing : float, optional
         confidence_threshold : float, optional
         spike_model_penalty : float, optional
 
@@ -274,7 +275,7 @@ class SortedSpikeDecoder(object):
         lagged_position : ndarray, shape (n_time,)
         trajectory_direction : ndarray, shape (n_time,)
         spikes : ndarray, shape (n_time, n_neurons)
-        initial_conditions : str or dict, optional
+        initial_conditions : str or dict of ndarray, optional
         place_bin_edges : None or ndarray, optional
 
         '''
@@ -285,16 +286,15 @@ class SortedSpikeDecoder(object):
                 position, self.n_place_bins, self.place_bin_size)
         self.place_bin_centers = get_bin_centers(self.place_bin_edges)
 
-        trajectory_directions = np.unique(
-            trajectory_direction[pd.notnull(trajectory_direction)])
-
-        self.fit_initial_conditions(trajectory_directions, initial_conditions)
+        self.fit_initial_conditions(trajectory_direction, initial_conditions)
 
         self.fit_state_transition(
             position, lagged_position, trajectory_direction,
             self.replay_speedup_factor)
 
         logger.info('Fitting observation model...')
+        trajectory_directions = np.unique(
+            trajectory_direction[pd.notnull(trajectory_direction)])
         conditional_intensity = fit_spike_observation_model(
             position, trajectory_direction, spikes,
             self.place_bin_centers, trajectory_directions,
@@ -308,8 +308,18 @@ class SortedSpikeDecoder(object):
 
         return self
 
-    def fit_initial_conditions(self, trajectory_directions,
+    def fit_initial_conditions(self, trajectory_direction,
                                initial_conditions='Inbound-Outbound'):
+        '''
+
+        Parameters
+        ----------
+        trajectory_direction : ndarray, shape (n_time,)
+        initial_conditions : str or dict of ndarray, optional
+        '''
+        trajectory_directions = np.unique(
+            trajectory_direction[pd.notnull(trajectory_direction)])
+
         if isinstance(initial_conditions, str):
             if initial_conditions == 'Inbound-Outbound':
                 initial_conditions = inbound_outbound_initial_conditions(
@@ -363,6 +373,13 @@ class SortedSpikeDecoder(object):
                               robust=True, **kwargs))
 
     def plot_observation_model(self, sampling_frequency=1):
+        '''
+
+        Parmameters
+        -----------
+        sampling_frequency : float, optional
+
+        '''
         conditional_intensity = self._combined_likelihood_kwargs[
             'likelihood_kwargs']['conditional_intensity'].squeeze()
         coords = dict(
@@ -389,7 +406,7 @@ class SortedSpikeDecoder(object):
 
         Returns
         -------
-        predicted_state : str
+        DecodingResults : DecodingResults class instance
 
         '''
         logger.info('Predicting replay type...')

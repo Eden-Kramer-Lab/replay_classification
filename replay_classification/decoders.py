@@ -236,6 +236,7 @@ class SortedSpikeDecoder(object):
                  time_bin_size=1,
                  knot_spacing=30,
                  confidence_threshold=0.8):
+                 spike_model_penalty=1E-1):
         '''
 
         Attributes
@@ -252,6 +253,7 @@ class SortedSpikeDecoder(object):
             optional
         time_bin_size : float, optional
         confidence_threshold : float, optional
+        spike_model_penalty : float, optional
 
         '''
         self.position = position
@@ -267,6 +269,7 @@ class SortedSpikeDecoder(object):
         self.time_bin_size = time_bin_size
         self.confidence_threshold = confidence_threshold
         self.knot_spacing = knot_spacing
+        self.spike_model_penalty = spike_model_penalty
 
     def __dir__(self):
         return self.keys()

@@ -103,7 +103,8 @@ def poisson_log_likelihood(is_spike, conditional_intensity=None,
 
 def fit_spike_observation_model(position, trajectory_direction, spikes,
                                 place_bin_centers, trajectory_directions,
-                                knot_spacing, observation_state_order):
+                                knot_spacing, observation_state_order,
+                                spike_model_penalty=1E-1):
     min_position, max_position = np.nanmin(position), np.nanmax(position)
     n_steps = (max_position - min_position) // knot_spacing
     position_knots = min_position + np.arange(1, n_steps) * knot_spacing
@@ -117,7 +118,8 @@ def fit_spike_observation_model(position, trajectory_direction, spikes,
         formula, training_data, return_type='dataframe')
     fit_coefficients = np.stack(
         [fit_glm_model(
-            pd.DataFrame(s).loc[design_matrix.index], design_matrix)
+            pd.DataFrame(s).loc[design_matrix.index], design_matrix,
+            spike_model_penalty)
          for s in tqdm(spikes, desc='neurons')], axis=1)
 
     ci_by_state = {

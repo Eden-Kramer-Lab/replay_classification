@@ -95,12 +95,12 @@ class _DecoderBase(BaseEstimator):
                         self.place_bin_centers)
                     for direction in trajectory_directions}
 
-        self.initial_conditions = np.stack(
+        self.initial_conditions_ = np.stack(
             [initial_conditions[state]
              for state in self.state_transition_state_order]
         ) / len(self.state_names)
-        self.initial_conditions = xr.DataArray(
-            self.initial_conditions, dims=['state', 'position'],
+        self.initial_conditions_ = xr.DataArray(
+            self.initial_conditions_, dims=['state', 'position'],
             coords=dict(position=self.place_bin_centers,
                         state=self.state_names),
             name='probability')
@@ -111,7 +111,7 @@ class _DecoderBase(BaseEstimator):
         trajectory_directions = np.unique(
             trajectory_direction[pd.notnull(trajectory_direction)])
         self.replay_speedup_factor = replay_speedup_factor
-        self.state_transition_matrix = fit_state_transition(
+        self.state_transition_matrix_ = fit_state_transition(
             position, lagged_position, self.place_bin_edges,
             self.place_bin_centers, trajectory_direction,
             trajectory_directions, self.replay_speedup_factor,
@@ -126,15 +126,15 @@ class _DecoderBase(BaseEstimator):
 
     def plot_initial_conditions(self, **kwargs):
         return (
-            self.initial_conditions.to_series().unstack().T.plot(**kwargs))
+            self.initial_conditions_.to_series().unstack().T.plot(**kwargs))
 
     def plot_state_transition_model(self, **kwargs):
         try:
-            return (self.state_transition_matrix
+            return (self.state_transition_matrix_
                     .plot(x='position_t', y='position_t_1', col='state',
                           robust=True, **kwargs))
         except ValueError:
-            return (self.state_transition_matrix
+            return (self.state_transition_matrix_
                         .plot(x='position_t', y='position_t_1',
                               robust=True, **kwargs))
 
@@ -208,7 +208,7 @@ class ClusterlessDecoder(_DecoderBase):
             ground_process_intensity=ground_process_intensity,
             time_bin_size=self.time_bin_size)
 
-        self._combined_likelihood_kwargs = dict(
+        self.combined_likelihood_kwargs_ = dict(
             log_likelihood_function=poisson_mark_log_likelihood,
             likelihood_kwargs=likelihood_kwargs)
 
@@ -229,10 +229,10 @@ class ClusterlessDecoder(_DecoderBase):
 
         '''
         likelihood = combined_likelihood(
-            spike_marks, **self._combined_likelihood_kwargs)
+            spike_marks, **self.combined_likelihood_kwargs_)
         results = predict_state(
-            initial_conditions=self.initial_conditions.values,
-            state_transition=self.state_transition_matrix.values,
+            initial_conditions=self.initial_conditions_.values,
+            state_transition=self.state_transition_matrix_.values,
             likelihood=likelihood)
         coords = dict(
             time=(time if time is not None
@@ -319,7 +319,7 @@ class SortedSpikeDecoder(_DecoderBase):
             self.knot_spacing, self.observation_state_order,
             self.spike_model_penalty)
 
-        self._combined_likelihood_kwargs = dict(
+        self.combined_likelihood_kwargs_ = dict(
             log_likelihood_function=poisson_log_likelihood,
             likelihood_kwargs=dict(conditional_intensity=conditional_intensity)
         )
@@ -334,7 +334,7 @@ class SortedSpikeDecoder(_DecoderBase):
         sampling_frequency : float, optional
 
         '''
-        conditional_intensity = self._combined_likelihood_kwargs[
+        conditional_intensity = self.combined_likelihood_kwargs_[
             'likelihood_kwargs']['conditional_intensity'].squeeze()
         coords = dict(
             state=self.state_names,
@@ -366,10 +366,10 @@ class SortedSpikeDecoder(_DecoderBase):
         logger.info('Predicting replay type...')
         likelihood = combined_likelihood(
             spikes.T[..., np.newaxis, np.newaxis],
-            **self._combined_likelihood_kwargs)
+            **self.combined_likelihood_kwargs_)
         results = predict_state(
-            initial_conditions=self.initial_conditions.values,
-            state_transition=self.state_transition_matrix.values,
+            initial_conditions=self.initial_conditions_.values,
+            state_transition=self.state_transition_matrix_.values,
             likelihood=likelihood)
         coords = dict(
             time=(time if time is not None

@@ -273,7 +273,7 @@ class SortedSpikeDecoder(object):
         position : ndarray, shape (n_time,)
         lagged_position : ndarray, shape (n_time,)
         trajectory_direction : ndarray, shape (n_time,)
-        spikes : ndarray, shape (n_neurons, n_time)
+        spikes : ndarray, shape (n_time, n_neurons)
         initial_conditions : str or dict, optional
         place_bin_edges : None or ndarray, optional
 
@@ -383,7 +383,7 @@ class SortedSpikeDecoder(object):
 
         Parameters
         ----------
-        spikes : ndarray, shape (n_neurons, n_time)
+        spikes : ndarray, shape (n_time, n_neurons)
             If spike does not occur, the row must be marked with np.nan.
         time : ndarray, optional, shape (n_time,)
 
@@ -394,7 +394,7 @@ class SortedSpikeDecoder(object):
         '''
         logger.info('Predicting replay type...')
         likelihood = combined_likelihood(
-            spikes[..., np.newaxis, np.newaxis],
+            spikes.T[..., np.newaxis, np.newaxis],
             **self._combined_likelihood_kwargs)
         results = predict_state(
             initial_conditions=self.initial_conditions.values,

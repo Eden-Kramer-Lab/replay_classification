@@ -120,7 +120,7 @@ def fit_spike_observation_model(position, trajectory_direction, spikes,
         [fit_glm_model(
             pd.DataFrame(s).loc[design_matrix.index], design_matrix,
             spike_model_penalty)
-         for s in tqdm(spikes, desc='neurons')], axis=1)
+         for s in tqdm(spikes.T, desc='neurons')], axis=1)
 
     ci_by_state = {
         direction: get_conditional_intensity(

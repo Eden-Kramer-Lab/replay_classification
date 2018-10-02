@@ -11,6 +11,7 @@ from sklearn.neighbors import KernelDensity
 import holoviews as hv
 
 from .core import (combined_likelihood, get_bin_centers,
+from .core import (combined_likelihood, get_bin_centers, get_bin_edges,
                    inbound_outbound_initial_conditions, predict_state,
                    uniform_initial_conditions)
 from .multiunit import (fit_multiunit_observation_model,
@@ -103,10 +104,8 @@ class ClusterlessDecoder(object):
 
         '''
 
-        self.place_bin_edges = np.linspace(
-            self.position.min(), self.position.max(),
-            self.n_position_bins + 1)
-
+        self.place_bin_edges = get_bin_edges(
+            self.position, self.n_place_bins, self.place_bin_size)
         self.place_bin_centers = get_bin_centers(self.place_bin_edges)
 
         trajectory_directions = np.unique(
@@ -261,6 +260,8 @@ class SortedSpikeDecoder(object):
         self.trajectory_direction = trajectory_direction
         self.spikes = spikes
         self.n_position_bins = n_position_bins
+        self.n_place_bins = n_place_bins
+        self.place_bin_size = place_bin_size
         self.replay_speedup_factor = replay_speedup_factor
         self.state_names = state_names
         self.observation_state_order = observation_state_order
@@ -275,13 +276,20 @@ class SortedSpikeDecoder(object):
         return self.keys()
 
     def fit(self):
+            place_bin_edges=None):
         '''Fits the decoder model by state
 
         Relates the position and spikes to the state.
+
+        Parameters
+        ----------
+        place_bin_edges : None or ndarray, optional
         '''
-        self.place_bin_edges = np.linspace(
-            np.floor(self.position.min()), np.ceil(self.position.max()),
-            self.n_position_bins + 1)
+        if place_bin_edges is not None:
+            self.place_bin_edges = place_bin_edges
+        else:
+            self.place_bin_edges = get_bin_edges(
+                position, self.n_place_bins, self.place_bin_size)
         self.place_bin_centers = get_bin_centers(self.place_bin_edges)
 
         trajectory_directions = np.unique(

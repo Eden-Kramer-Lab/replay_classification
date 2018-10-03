@@ -5,7 +5,7 @@ channels:
 - ioam
 - edeno
 dependencies:
-- "python>=3.5"
+- "python>=3.6"
 - setuptools
 - numpy
 - scipy
@@ -15,6 +15,7 @@ dependencies:
 - regularized_glm
 - matplotlib
 - seaborn
+- scikit-learn
 - patsy
 - pytest
 - jupyter
@@ -23,3 +24,4 @@ dependencies:
 - numba
 - holoviews
 - bokeh
+- tqdm

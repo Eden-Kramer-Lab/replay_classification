@@ -7,6 +7,19 @@ from statsmodels.api import families
 from regularized_glm import penalized_IRLS
 from patsy import dmatrix
 
+try:
+    from IPython import get_ipython
+
+    if 'IPKernelApp' in get_ipython().config:
+        from tqdm import tqdm_notebook as tqdm
+    else:
+        from tqdm import tqdm
+except ImportError:
+    def tqdm(*args, **kwargs):
+        if args:
+            return args[0]
+        return kwargs.get('iterable', None)
+
 logger = getLogger(__name__)
 
 
@@ -90,11 +103,11 @@ def poisson_log_likelihood(is_spike, conditional_intensity=None,
 
 def fit_spike_observation_model(position, trajectory_direction, spikes,
                                 place_bin_centers, trajectory_directions,
-                                knot_spacing, observation_state_order):
-    min_position, max_position = (position.min(), position.max())
+                                knot_spacing, observation_state_order,
+                                spike_model_penalty=1E-1):
+    min_position, max_position = np.nanmin(position), np.nanmax(position)
     n_steps = (max_position - min_position) // knot_spacing
-    position_knots = min_position + (np.arange(1, n_steps)
-                                     * knot_spacing)
+    position_knots = min_position + np.arange(1, n_steps) * knot_spacing
     formula = ('1 + trajectory_direction * '
                'cr(position, knots=position_knots, constraints="center")')
 
@@ -105,14 +118,17 @@ def fit_spike_observation_model(position, trajectory_direction, spikes,
         formula, training_data, return_type='dataframe')
     fit_coefficients = np.stack(
         [fit_glm_model(
-            pd.DataFrame(s).loc[design_matrix.index], design_matrix)
-         for s in spikes], axis=1)
+            pd.DataFrame(s).loc[design_matrix.index], design_matrix,
+            spike_model_penalty)
+         for s in tqdm(spikes.T, desc='neurons')], axis=1)
 
     ci_by_state = {
         direction: get_conditional_intensity(
             fit_coefficients, predictors_by_trajectory_direction(
                 direction, place_bin_centers, design_matrix))
         for direction in trajectory_directions}
-    return np.stack(
+
+    conditional_intensity = np.stack(
         [ci_by_state[state] for state in observation_state_order],
         axis=1)
+    return conditional_intensity[:, np.newaxis, ...]

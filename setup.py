@@ -10,7 +10,7 @@ TESTS_REQUIRE = ['pytest >= 2.7.1']
 
 setup(
         name='replay_classification',
-        version='0.4.1',
+        version='0.5.1',
         license='GPL-3.0',
         description=('Non-parametric categorization of replay content from'
                      ' multiunit spiking activity'),

@@ -384,15 +384,18 @@ class SortedSpikeDecoder(_DecoderBase):
         return DecodingResults(
             results=results,
             spikes=spikes,
+            place_bin_size=place_bin_size,
             confidence_threshold=self.confidence_threshold,
         )
 
 
 class DecodingResults():
 
-    def __init__(self, results, spikes=None, confidence_threshold=0.8):
+    def __init__(self, results, place_bin_size, spikes=None,
+                 confidence_threshold=0.8):
         self.results = results
         self.spikes = spikes
+        self.place_bin_size = place_bin_size
         self.confidence_threshold = confidence_threshold
 
     def __dir__(self):
@@ -400,7 +403,7 @@ class DecodingResults():
 
     def state_probability(self):
         return (self.results['posterior_density'].sum('position')
-                .to_series().unstack())
+                .to_series().unstack()) * self.place_bin_size
 
     def predicted_state(self):
         state_probability = self.state_probability()

@@ -108,8 +108,6 @@ class _DecoderBase(BaseEstimator):
     def fit_state_transition(self, position, lagged_position,
                              trajectory_direction, replay_speedup_factor=20):
         logger.info('Fitting state transition model...')
-        trajectory_directions = np.unique(
-            trajectory_direction[pd.notnull(trajectory_direction)])
         self.replay_speedup_factor = replay_speedup_factor
         self.state_transition_matrix_ = fit_state_transition(
             position, lagged_position, self.place_bin_edges,

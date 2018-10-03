@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import xarray as xr
 from scipy.ndimage.filters import gaussian_filter
 
@@ -65,8 +66,10 @@ def _fix_zero_bins(movement_bins):
 
 def fit_state_transition(position, lagged_position, place_bin_edges,
                          place_bin_centers, trajectory_direction,
-                         trajectory_directions, replay_speedup_factor,
+                         replay_speedup_factor,
                          state_transition_state_order, state_names):
+    trajectory_directions = np.unique(
+        trajectory_direction[pd.notnull(trajectory_direction)])
     state_transition_by_state = {
         direction: empirical_movement_transition_matrix(
             position, lagged_position,

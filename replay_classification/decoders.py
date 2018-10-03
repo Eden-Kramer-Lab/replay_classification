@@ -185,8 +185,8 @@ class ClusterlessDecoder(_DecoderBase):
         self.model_kwargs = model_kwargs
 
     def fit(self, position, trajectory_direction,
-            multiunits, is_training=None, initial_conditions='Inbound-Outbound',
-            place_bin_edges=None):
+            multiunits, is_training=None,
+            initial_conditions='Inbound-Outbound', place_bin_edges=None):
         '''Fits the decoder model for each trajectory_direction.
 
         Relates the position and multiunits to the trajectory_direction.
@@ -261,7 +261,8 @@ class ClusterlessDecoder(_DecoderBase):
         if is_smooth:
             results = smooth(
                 filter_posterior=results['posterior_density'],
-                backwards_state_transition=self.backwards_state_transition_.values,
+                backwards_state_transition=(self.backwards_state_transition_
+                                            .values),
                 bin_size=place_bin_size)
             results['likelihood'] = likelihood
 
@@ -416,7 +417,8 @@ class SortedSpikeDecoder(_DecoderBase):
         if is_smooth:
             results = smooth(
                 filter_posterior=results['posterior_density'],
-                backwards_state_transition=self.backwards_state_transition_.values,
+                backwards_state_transition=(self.backwards_state_transition_
+                                            .values),
                 bin_size=place_bin_size)
             results['likelihood'] = likelihood
         coords = dict(

@@ -10,7 +10,7 @@ from patsy import dmatrix
 try:
     from IPython import get_ipython
 
-    if 'IPKernelApp' in get_ipython().config:
+    if get_ipython() is not None:
         from tqdm import tqdm_notebook as tqdm
     else:
         from tqdm import tqdm

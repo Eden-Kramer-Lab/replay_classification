@@ -11,8 +11,8 @@ from sklearn.neighbors import KernelDensity
 
 import holoviews as hv
 
-from .core import (combined_likelihood, get_bin_centers, get_bin_edges,
-                   inbound_outbound_initial_conditions, predict_state,
+from .core import (combined_likelihood, filter, get_bin_centers, get_bin_edges,
+                   inbound_outbound_initial_conditions, smooth,
                    uniform_initial_conditions)
 from .multiunit import (fit_multiunit_observation_model,
                         poisson_mark_log_likelihood)
@@ -105,14 +105,27 @@ class _DecoderBase(BaseEstimator):
                         state=self.state_names),
             name='probability')
 
-    def fit_state_transition(self, position, lagged_position,
-                             trajectory_direction, replay_speedup_factor=20):
+    def fit_state_transition(self, position, is_training, trajectory_direction,
+                             replay_speedup_factor=20):
         logger.info('Fitting state transition model...')
         self.replay_speedup_factor = replay_speedup_factor
-        self.state_transition_matrix_ = fit_state_transition(
-            position, lagged_position, self.place_bin_edges,
-            self.place_bin_centers, trajectory_direction,
-            trajectory_directions, self.replay_speedup_factor,
+        df = pd.DataFrame({'position': position,
+                           'is_training': is_training,
+                           'trajectory_direction': trajectory_direction})
+        df['lagged_position'] = df.position.shift(1)
+        df['future_position'] = df.position.shift(-1)
+        df = df.loc[df.is_training].dropna()
+
+        self.state_transition_ = fit_state_transition(
+            df['position'], df['lagged_position'], self.place_bin_edges,
+            self.place_bin_centers, df['trajectory_direction'],
+            self.replay_speedup_factor,
+            self.state_transition_state_order, self.state_names)
+
+        self.backwards_state_transition_ = fit_state_transition(
+            df['future_position'], df['position'], self.place_bin_edges,
+            self.place_bin_centers, df['trajectory_direction'],
+            self.replay_speedup_factor,
             self.state_transition_state_order, self.state_names)
 
     def save_model(self, filename='model.pkl'):
@@ -128,11 +141,11 @@ class _DecoderBase(BaseEstimator):
 
     def plot_state_transition_model(self, **kwargs):
         try:
-            return (self.state_transition_matrix_
+            return (self.state_transition_
                     .plot(x='position_t', y='position_t_1', col='state',
                           robust=True, **kwargs))
         except ValueError:
-            return (self.state_transition_matrix_
+            return (self.state_transition_
                         .plot(x='position_t', y='position_t_1',
                               robust=True, **kwargs))
 
@@ -171,16 +184,21 @@ class ClusterlessDecoder(_DecoderBase):
         self.model = model
         self.model_kwargs = model_kwargs
 
-    def fit(self, position, lagged_position, trajectory_direction,
-            spike_marks, initial_conditions='Inbound-Outbound',
+    def fit(self, position, trajectory_direction,
+            multiunits, is_training=None, initial_conditions='Inbound-Outbound',
             place_bin_edges=None):
         '''Fits the decoder model for each trajectory_direction.
 
-        Relates the position and spike_marks to the trajectory_direction.
+        Relates the position and multiunits to the trajectory_direction.
 
         Parameters
         ----------
-
+        position : ndarray, shape (n_time,)
+        trajectory_direction : ndarray, shape (n_time,)
+        multiunits : ndarray, shape (n_signals, n_time, n_features)
+        is_training : None or ndarray, bool, shape (n_time, )
+        initial_conditions : str or dict of ndarray, optional
+        place_bin_edges : None or ndarray, optional
 
         Returns
         -------
@@ -190,16 +208,18 @@ class ClusterlessDecoder(_DecoderBase):
 
         self.fit_place_bins(position, place_bin_edges)
         self.fit_initial_conditions(trajectory_direction, initial_conditions)
+        if is_training is None:
+            is_training = np.ones_like(position, dtype=np.bool)
         self.fit_state_transition(
-            position, lagged_position, trajectory_direction,
+            position, is_training, trajectory_direction,
             self.replay_speedup_factor)
 
         logger.info('Fitting observation model...')
         joint_mark_intensity_functions, ground_process_intensity = (
             fit_multiunit_observation_model(
-                position, trajectory_direction, spike_marks,
-                self.place_bin_centers, self.model, self.model_kwargs,
-                self.observation_state_order))
+                position[is_training], trajectory_direction[is_training],
+                multiunits[:, is_training], self.place_bin_centers,
+                self.model, self.model_kwargs, self.observation_state_order))
 
         likelihood_kwargs = dict(
             joint_mark_intensity_functions=joint_mark_intensity_functions,
@@ -212,26 +232,39 @@ class ClusterlessDecoder(_DecoderBase):
 
         return self
 
-    def predict(self, spike_marks, time=None):
-        '''Predicts the state from spike_marks.
+    def predict(self, multiunits, time=None, is_smooth=True):
+        '''Predicts the state from multiunits.
 
         Parameters
         ----------
-        spike_marks : ndarray, shape (n_signals, n_time, n_marks)
+        multiunits : ndarray, shape (n_signals, n_time, n_marks)
             If spike does not occur, the row must be marked with np.nan.
         time : ndarray, optional, shape (n_time,)
+        is_smooth : bool
+            Use future information to compute state
 
         Returns
         -------
-        predicted_state : str
+        DecodingResults : DecodingResults class instance
 
         '''
         likelihood = combined_likelihood(
-            spike_marks, **self.combined_likelihood_kwargs_)
-        results = predict_state(
+            multiunits, **self.combined_likelihood_kwargs_)
+        place_bin_size = np.diff(self.place_bin_edges)[0]
+        state_transition = self.state_transition_.values
+        results = filter(
             initial_conditions=self.initial_conditions_.values,
-            state_transition=self.state_transition_matrix_.values,
-            likelihood=likelihood)
+            state_transition=state_transition,
+            likelihood=likelihood,
+            bin_size=place_bin_size)
+
+        if is_smooth:
+            results = smooth(
+                filter_posterior=results['posterior_density'],
+                backwards_state_transition=self.backwards_state_transition_.values,
+                bin_size=place_bin_size)
+            results['likelihood'] = likelihood
+
         coords = dict(
             time=(time if time is not None
                   else np.arange(results['posterior_density'].shape[0])),
@@ -247,7 +280,8 @@ class ClusterlessDecoder(_DecoderBase):
 
         return DecodingResults(
             results=results,
-            spikes=spike_marks,
+            spikes=multiunits,
+            place_bin_size=place_bin_size,
             confidence_threshold=self.confidence_threshold,
         )
 
@@ -285,9 +319,8 @@ class SortedSpikeDecoder(_DecoderBase):
         self.knot_spacing = knot_spacing
         self.spike_model_penalty = spike_model_penalty
 
-    def fit(self, position, lagged_position, trajectory_direction,
-            spikes, initial_conditions='Inbound-Outbound',
-            place_bin_edges=None):
+    def fit(self, position, trajectory_direction, spikes, is_training=None,
+            initial_conditions='Inbound-Outbound', place_bin_edges=None):
         '''Fits the decoder model by state
 
         Relates the position and spikes to the state.
@@ -295,25 +328,31 @@ class SortedSpikeDecoder(_DecoderBase):
         Parameters
         ----------
         position : ndarray, shape (n_time,)
-        lagged_position : ndarray, shape (n_time,)
         trajectory_direction : ndarray, shape (n_time,)
         spikes : ndarray, shape (n_time, n_neurons)
+        is_training : None or ndarray, bool, shape (n_time, )
         initial_conditions : str or dict of ndarray, optional
         place_bin_edges : None or ndarray, optional
+
+        Returns
+        -------
+        self : class instance
 
         '''
         self.fit_place_bins(position, place_bin_edges)
         self.fit_initial_conditions(trajectory_direction, initial_conditions)
+        if is_training is None:
+            is_training = np.ones_like(position, dtype=np.bool)
         self.fit_state_transition(
-            position, lagged_position, trajectory_direction,
+            position, is_training, trajectory_direction,
             self.replay_speedup_factor)
 
         logger.info('Fitting observation model...')
         trajectory_directions = np.unique(
             trajectory_direction[pd.notnull(trajectory_direction)])
         conditional_intensity = fit_spike_observation_model(
-            position, trajectory_direction, spikes,
-            self.place_bin_centers, trajectory_directions,
+            position[is_training], trajectory_direction[is_training],
+            spikes[is_training], self.place_bin_centers, trajectory_directions,
             self.knot_spacing, self.observation_state_order,
             self.spike_model_penalty)
 
@@ -347,14 +386,16 @@ class SortedSpikeDecoder(_DecoderBase):
             row='signal', col='state')
         return g.map(plt.plot, 'position', 'firing_rate')
 
-    def predict(self, spikes, time=None):
-        '''Predicts the state from spike_marks.
+    def predict(self, spikes, time=None, is_smooth=True):
+        '''Predicts the state from multiunits.
 
         Parameters
         ----------
         spikes : ndarray, shape (n_time, n_neurons)
             If spike does not occur, the row must be marked with np.nan.
         time : ndarray, optional, shape (n_time,)
+        is_smooth : bool
+            Use future information to compute state
 
         Returns
         -------
@@ -362,13 +403,22 @@ class SortedSpikeDecoder(_DecoderBase):
 
         '''
         logger.info('Predicting replay type...')
+        place_bin_size = np.diff(self.place_bin_edges)[0]
         likelihood = combined_likelihood(
             spikes.T[..., np.newaxis, np.newaxis],
             **self.combined_likelihood_kwargs_)
-        results = predict_state(
+        state_transition = self.state_transition_.values
+        results = filter(
             initial_conditions=self.initial_conditions_.values,
-            state_transition=self.state_transition_matrix_.values,
-            likelihood=likelihood)
+            state_transition=state_transition,
+            likelihood=likelihood,
+            bin_size=place_bin_size)
+        if is_smooth:
+            results = smooth(
+                filter_posterior=results['posterior_density'],
+                backwards_state_transition=self.backwards_state_transition_.values,
+                bin_size=place_bin_size)
+            results['likelihood'] = likelihood
         coords = dict(
             time=(time if time is not None
                   else np.arange(results['posterior_density'].shape[0])),

@@ -403,7 +403,6 @@ class SortedSpikeDecoder(_DecoderBase):
         DecodingResults : DecodingResults class instance
 
         '''
-        logger.info('Predicting replay type...')
         place_bin_size = np.diff(self.place_bin_edges)[0]
         likelihood = combined_likelihood(
             spikes.T[..., np.newaxis, np.newaxis],

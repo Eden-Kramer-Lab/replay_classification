@@ -102,10 +102,10 @@ def update_backwards_posterior(filter_posterior, state_transition,
     updated_posterior : ndarray, shape (n_states, n_bins)
 
     '''
-    weights = np.sum(
-        state_transition * smoother_posterior / (prior + np.spacing(1)),
-        axis=-2) * bin_size
-    weights = weights[..., np.newaxis]
+    log_ratio = (np.log(smoother_posterior + np.spacing(1)) -
+                 np.log(prior + np.spacing(1))).swapaxes(1, 2)
+    weights = np.exp(log_ratio) @ state_transition * bin_size
+    weights = weights.squeeze()[..., np.newaxis]
     return normalize_to_probability(weights * filter_posterior, bin_size)
 
 

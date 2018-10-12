@@ -52,13 +52,13 @@ def filter(initial_conditions, state_transition, likelihood, bin_size):
             'prior': prior.squeeze()}
 
 
-def smooth(filter_posterior, backwards_state_transition, bin_size):
+def smooth(filter_posterior, state_transition, bin_size):
     '''Uses past and future information to estimate the state.
 
     Parameters
     ----------
     filter_posterior : ndarray, shape (n_time, n_bins)
-    backwards_state_transition : ndarray, shape (n_states, n_bins, n_bins)
+    state_transition : ndarray, shape (n_states, n_bins, n_bins)
     bin_size : float
 
     Return
@@ -73,10 +73,10 @@ def smooth(filter_posterior, backwards_state_transition, bin_size):
 
     for time_ind in np.arange(n_time - 2, -1, -1):
         smoother_prior[time_ind] = predict_state(
-            filter_posterior[time_ind], backwards_state_transition,
+            filter_posterior[time_ind], state_transition,
             bin_size)
         smoother_posterior[time_ind] = update_backwards_posterior(
-            filter_posterior[time_ind], backwards_state_transition,
+            filter_posterior[time_ind], state_transition,
             smoother_posterior[time_ind + 1], smoother_prior[time_ind],
             bin_size)
 

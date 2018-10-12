@@ -122,12 +122,6 @@ class _DecoderBase(BaseEstimator):
             self.replay_speedup_factor,
             self.state_transition_state_order, self.state_names)
 
-        self.backwards_state_transition_ = fit_state_transition(
-            df['future_position'], df['position'], self.place_bin_edges,
-            self.place_bin_centers, df['trajectory_direction'],
-            self.replay_speedup_factor,
-            self.state_transition_state_order, self.state_names)
-
     def save_model(self, filename='model.pkl'):
         joblib.dump(self, filename)
 
@@ -261,8 +255,7 @@ class ClusterlessDecoder(_DecoderBase):
         if is_smooth:
             results = smooth(
                 filter_posterior=results['posterior_density'],
-                backwards_state_transition=(self.backwards_state_transition_
-                                            .values),
+                state_transition=self.state_transition_.values,
                 bin_size=place_bin_size)
             results['likelihood'] = likelihood
 
@@ -416,8 +409,7 @@ class SortedSpikeDecoder(_DecoderBase):
         if is_smooth:
             results = smooth(
                 filter_posterior=results['posterior_density'],
-                backwards_state_transition=(self.backwards_state_transition_
-                                            .values),
+                state_transition=self.state_transition_.values,
                 bin_size=place_bin_size)
             results['likelihood'] = likelihood
         coords = dict(

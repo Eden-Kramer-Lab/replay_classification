@@ -45,7 +45,9 @@ def uniform_initial_conditions(
         name='probability')
 
 
-def inbound_outbound_initial_conditions(place_bin_centers):
+def inbound_outbound_initial_conditions(
+    position_info, place_bin_edges, place_bin_centers,
+        replay_sequence_orders='Forward'):
     '''Sets the prior for each state (Outbound-Forward, Outbound-Reverse,
     Inbound-Forward, Inbound-Reverse).
 
@@ -62,22 +64,50 @@ def inbound_outbound_initial_conditions(place_bin_centers):
     initial_conditions : dict
 
     '''
+    CENTER_WELL_LOCATION = 0.0
+
+    if isinstance(replay_sequence_orders, str):
+        replay_sequence_orders = [replay_sequence_orders]
+
     bin_size = place_bin_centers[1] - place_bin_centers[0]
 
     outbound_initial_conditions = normalize_to_probability(
-        norm.pdf(place_bin_centers, loc=0,
-                 scale=bin_size * 2), bin_size)
+        norm.pdf(place_bin_centers, loc=CENTER_WELL_LOCATION,
+                 scale=2 * bin_size), bin_size)
 
+    # Everywhere but the center well
     inbound_initial_conditions = normalize_to_probability(
         (np.max(outbound_initial_conditions) *
          np.ones(place_bin_centers.shape)) -
         outbound_initial_conditions, bin_size)
 
-    uniform = uniform_initial_conditions(place_bin_centers)
+    uniform = normalize_to_probability(
+        np.ones_like(place_bin_centers), bin_size)
 
-    return {'Inbound': inbound_initial_conditions,
-            'Outbound': outbound_initial_conditions,
-            'Stay': uniform}
+    conditions_map = {
+        ('Inbound', 'Forward'): inbound_initial_conditions,
+        ('Inbound', 'Reverse'): outbound_initial_conditions,
+        ('Outbound', 'Forward'): outbound_initial_conditions,
+        ('Outbound', 'Reverse'): inbound_initial_conditions,
+        ('Inbound', 'Stay'): uniform,
+        ('Outbound', 'Stay'): uniform}
+
+    state_names = []
+    initial_conditions = []
+
+    for order in replay_sequence_orders:
+        for condition, df in position_info.groupby('experimental_condition'):
+            state_names.append('-'.join((condition, order)))
+            initial_conditions.append(conditions_map[(condition, order)])
+
+    initial_conditions = normalize_to_probability(
+        np.stack(initial_conditions), bin_size)
+
+    return xr.DataArray(
+        initial_conditions, dims=['state', 'position'],
+        coords=dict(position=place_bin_centers,
+                    state=state_names),
+        name='probability')
 
 
 def fit_initial_conditions(position_info, place_bin_edges, place_bin_centers,

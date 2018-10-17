@@ -247,7 +247,7 @@ class ClusterlessDecoder(_DecoderBase):
 
         return self
 
-    def predict(self, multiunits, time=None, is_smooth=True):
+    def predict(self, multiunits, time=None, use_smoother=True):
         '''Predicts the state from multiunits.
 
         Parameters
@@ -255,7 +255,7 @@ class ClusterlessDecoder(_DecoderBase):
         multiunits : ndarray, shape (n_signals, n_time, n_marks)
             If spike does not occur, the row must be marked with np.nan.
         time : ndarray, optional, shape (n_time,)
-        is_smooth : bool
+        use_smoother : bool
             Use future information to compute state
 
         Returns
@@ -422,7 +422,7 @@ class SortedSpikeDecoder(_DecoderBase):
             row='signal', col='state')
         return g.map(plt.plot, 'position', 'firing_rate')
 
-    def predict(self, spikes, time=None, is_smooth=True):
+    def predict(self, spikes, time=None, use_smoother=True):
         '''Predicts the state from multiunits.
 
         Parameters
@@ -430,7 +430,7 @@ class SortedSpikeDecoder(_DecoderBase):
         spikes : ndarray, shape (n_time, n_neurons)
             If spike does not occur, the row must be marked with np.nan.
         time : ndarray, optional, shape (n_time,)
-        is_smooth : bool
+        use_smoother : bool
             Use future information to compute state
 
         Returns

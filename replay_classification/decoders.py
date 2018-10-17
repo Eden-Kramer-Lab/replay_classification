@@ -201,15 +201,25 @@ class ClusterlessDecoder(_DecoderBase):
             trajectory_direction.copy()).squeeze()
         multiunits = np.asarray(multiunits.copy())
 
-        self.fit_place_bins(position, place_bin_edges)
-        self.fit_initial_conditions(trajectory_direction, initial_conditions)
         if is_training is None:
             is_training = np.ones_like(position, dtype=np.bool)
         else:
             is_training = np.asarray(is_training).squeeze()
+
+        if trial_id is None:
+            trial_id = np.ones_like(position, dtype=np.bool)
+        else:
+            trial_id = np.asarray(trial_id).squeeze()
+
+        self.fit_place_bins(position, place_bin_edges)
+
         self.fit_state_transition(
             position, is_training, trajectory_direction,
             self.replay_speedup_factor)
+
+        self.fit_initial_conditions(initial_conditions, position,
+                                    is_training, trajectory_direction,
+                                    trial_id)
 
         logger.info('Fitting observation model...')
         joint_mark_intensity_functions, ground_process_intensity = (

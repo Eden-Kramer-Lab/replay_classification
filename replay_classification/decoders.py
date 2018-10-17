@@ -24,6 +24,11 @@ from .state_transition import fit_state_transition
 logger = getLogger(__name__)
 
 _DEFAULT_STATE_TRANSITION_STATE_ORDER = ['Forward', 'Reverse', 'Stay']
+_INITIAL_CONDITIONS_MAP = {
+    'Inbound-Outbound': inbound_outbound_initial_conditions,
+    'Uniform': uniform_initial_conditions,
+    'Empirical': fit_initial_conditions
+}
 hv.extension('bokeh', 'matplotlib')
 
 
@@ -80,20 +85,14 @@ class _DecoderBase(BaseEstimator):
              'is_training': is_training,
              'experimental_condition': experimental_condition,
              'trial_id': trial_id})
+        df['lagged_position'] = df.position.shift(1)
         df = df.loc[df.is_training].dropna()
 
         if isinstance(initial_conditions, str):
-            if initial_conditions == 'Inbound-Outbound':
-                self.initial_conditions_ = inbound_outbound_initial_conditions(
-                    self.place_bin_centers)
-            elif initial_conditions == 'Uniform':
-                self.initial_conditions_ = uniform_initial_conditions(
+            self.initial_conditions_ = (
+                _INITIAL_CONDITIONS_MAP[initial_conditions](
                     df, self.place_bin_edges, self.place_bin_centers,
-                    self.state_transition_state_order)
-            elif initial_conditions == 'Empirical':
-                self.initial_conditions_ = fit_initial_conditions(
-                    df, self.place_bin_edges, self.place_bin_centers,
-                    self.state_transition_state_order)
+                    self.state_transition_state_order))
         else:
             self.initial_conditions_ = xr.DataArray(
                 initial_conditions, dims=['state', 'position'],

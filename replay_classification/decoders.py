@@ -470,7 +470,8 @@ class DecodingResults():
         is_threshold = np.sum(
             (state_probability > self.confidence_threshold), axis=1)
         if np.any(is_threshold):
-            return state_probability.iloc[is_threshold.values.argmax()].idxmax()
+            return state_probability.iloc[
+                is_threshold.values.argmax()].idxmax()
         else:
             return 'Unclassified'
 

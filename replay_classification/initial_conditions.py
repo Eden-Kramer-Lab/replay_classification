@@ -1,9 +1,20 @@
 import numpy as np
 import xarray as xr
+from patsy import dmatrices
 from scipy.ndimage.filters import gaussian_filter
 from scipy.stats import norm
+from statsmodels.api import GLM, families
 
 from .core import normalize_to_probability
+
+
+def estimate_movement_std(position_info):
+
+    MODEL_FORMULA = 'position ~ lagged_position - 1'
+    response, design_matrix = dmatrices(MODEL_FORMULA, position_info)
+    fit = GLM(response, design_matrix, family=families.Gaussian()).fit()
+
+    return np.sqrt(fit.scale)
 
 
 def uniform_initial_conditions(
@@ -93,8 +104,9 @@ def fit_initial_conditions(position_info, place_bin_edges, place_bin_centers,
 
     for (order, condition), df in grouper:
         state_names.append('-'.join((condition, order)))
+        movement_std = estimate_movement_std(df)
         initial_conditions.append(empirical_inital_conditions(
-            df.position, place_bin_edges, bin_size))
+            df.position, place_bin_edges, bin_size, movement_std))
 
     initial_conditions = normalize_to_probability(
         np.stack(initial_conditions), bin_size)
@@ -106,7 +118,7 @@ def fit_initial_conditions(position_info, place_bin_edges, place_bin_centers,
         name='probability')
 
 
-def empirical_inital_conditions(position, place_bin_edges, sigma=0.5):
+def empirical_inital_conditions(position, place_bin_edges, movement_std=0.5):
     try:
         movement_bins, _ = np.histogram(position, bins=place_bin_edges)
     except ValueError:
@@ -117,4 +129,4 @@ def empirical_inital_conditions(position, place_bin_edges, sigma=0.5):
     bin_size = np.diff(place_bin_edges)[0]
     movement_bins = normalize_to_probability(movement_bins, bin_size)
 
-    return gaussian_filter(movement_bins, sigma=sigma)
+    return gaussian_filter(movement_bins, sigma=movement_std)

@@ -77,7 +77,7 @@ class _DecoderBase(BaseEstimator):
 
         Parameters
         ----------
-        trajectory_direction : ndarray, shape (n_time,)
+        experimental_condition : ndarray, shape (n_time,)
         initial_conditions : str or dict of ndarray, optional
         '''
         df = pd.DataFrame(
@@ -175,21 +175,24 @@ class ClusterlessDecoder(_DecoderBase):
         self.model = model
         self.model_kwargs = model_kwargs
 
-    def fit(self, position, trajectory_direction,
-            multiunits, is_training=None,
-            trial_id=None, initial_conditions='Inbound-Outbound',
-            place_bin_edges=None):
-        '''Fits the decoder model for each trajectory_direction.
+    def fit(self, position, multiunits, experimental_condition=None,
+            is_training=None, trial_id=None,
+            initial_conditions='Inbound-Outbound', place_bin_edges=None):
+        '''Fits the decoder model for each experimental_condition
+        and replay order.
 
-        Relates the position and multiunits to the trajectory_direction.
+        Relates the position and multiunits to the experimental_condition.
 
         Parameters
         ----------
         position : ndarray, shape (n_time,)
-        trajectory_direction : ndarray, shape (n_time,)
         multiunits : ndarray, shape (n_signals, n_time, n_features)
-        is_training : None or ndarray, bool, shape (n_time, )
-        initial_conditions : str or dict of ndarray, optional
+        experimental_condition : None or ndarray, shape (n_time,)
+        is_training : None or ndarray, bool, shape (n_time, ), optional
+        trial_id : None or ndarray, shape (n_time,), optional
+        initial_conditions : str or ndarray, shape (n_states, n_place_bin),
+                             optional
+            ('Inbound-Outbound' | 'Uniform' | 'Empirical')
         place_bin_edges : None or ndarray, optional
 
         Returns
@@ -198,8 +201,6 @@ class ClusterlessDecoder(_DecoderBase):
         '''
 
         position = np.asarray(position.copy()).squeeze()
-        trajectory_direction = np.asarray(
-            trajectory_direction.copy()).squeeze()
         multiunits = np.asarray(multiunits.copy())
 
         if is_training is None:
@@ -212,20 +213,26 @@ class ClusterlessDecoder(_DecoderBase):
         else:
             trial_id = np.asarray(trial_id).squeeze()
 
+        if experimental_condition is None:
+            experimental_condition = np.ones_like(position, dtype=np.bool)
+        else:
+            experimental_condition = np.asarray(
+                experimental_condition.copy()).squeeze()
+
         self.fit_place_bins(position, place_bin_edges)
 
         self.fit_state_transition(
-            position, is_training, trajectory_direction,
+            position, is_training, experimental_condition,
             self.replay_speedup_factor)
 
         self.fit_initial_conditions(initial_conditions, position,
-                                    is_training, trajectory_direction,
+                                    is_training, experimental_condition,
                                     trial_id)
 
         logger.info('Fitting observation model...')
         joint_mark_intensity_functions, ground_process_intensity = (
             fit_multiunit_observation_model(
-                position[is_training], trajectory_direction[is_training],
+                position[is_training], experimental_condition[is_training],
                 multiunits[:, is_training], self.place_bin_centers,
                 self.model, self.model_kwargs, self.observation_state_order))
 
@@ -324,9 +331,9 @@ class SortedSpikeDecoder(_DecoderBase):
         self.knot_spacing = knot_spacing
         self.spike_model_penalty = spike_model_penalty
 
-    def fit(self, position, trajectory_direction, spikes, is_training=None,
-            trial_id=None, initial_conditions='Inbound-Outbound',
-            place_bin_edges=None):
+    def fit(self, position, spikes, experimental_condition=None,
+            is_training=None, trial_id=None,
+            initial_conditions='Inbound-Outbound', place_bin_edges=None):
         '''Fits the decoder model by state
 
         Relates the position and spikes to the state.
@@ -334,10 +341,13 @@ class SortedSpikeDecoder(_DecoderBase):
         Parameters
         ----------
         position : ndarray, shape (n_time,)
-        trajectory_direction : ndarray, shape (n_time,)
         spikes : ndarray, shape (n_time, n_neurons)
-        is_training : None or ndarray, bool, shape (n_time, )
-        initial_conditions : str or dict of ndarray, optional
+        experimental_condition : None or ndarray, shape (n_time,)
+        is_training : None or ndarray, bool, shape (n_time, ), optional
+        trial_id : None or ndarray, shape (n_time,), optional
+        initial_conditions : str or ndarray, shape (n_states, n_place_bin),
+                             optional
+            ('Inbound-Outbound' | 'Uniform' | 'Empirical')
         place_bin_edges : None or ndarray, optional
 
         Returns
@@ -346,11 +356,8 @@ class SortedSpikeDecoder(_DecoderBase):
 
         '''
         position = np.asarray(position.copy()).squeeze()
-        trajectory_direction = np.asarray(
-            trajectory_direction.copy()).squeeze()
         spikes = np.asarray(spikes.copy())
 
-        self.fit_place_bins(position, place_bin_edges)
         if is_training is None:
             is_training = np.ones_like(position, dtype=np.bool)
         else:
@@ -361,19 +368,27 @@ class SortedSpikeDecoder(_DecoderBase):
         else:
             trial_id = np.asarray(trial_id).squeeze()
 
+        if experimental_condition is None:
+            experimental_condition = np.ones_like(position, dtype=np.bool)
+        else:
+            experimental_condition = np.asarray(
+                experimental_condition.copy()).squeeze()
+
+        self.fit_place_bins(position, place_bin_edges)
+
         self.fit_state_transition(
-            position, is_training, trajectory_direction,
+            position, is_training, experimental_condition,
             self.replay_speedup_factor)
 
         logger.info('Fitting observation model...')
         conditional_intensity = fit_spike_observation_model(
-            position[is_training], trajectory_direction[is_training],
+            position[is_training], experimental_condition[is_training],
             spikes[is_training], self.place_bin_centers,
             self.knot_spacing, self.observation_state_order,
             self.spike_model_penalty)
 
         self.fit_initial_conditions(initial_conditions, position,
-                                    is_training, trajectory_direction,
+                                    is_training, experimental_condition,
                                     trial_id)
 
         self.combined_likelihood_kwargs_ = dict(

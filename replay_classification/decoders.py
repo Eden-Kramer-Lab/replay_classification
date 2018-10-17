@@ -274,7 +274,7 @@ class ClusterlessDecoder(_DecoderBase):
             likelihood=likelihood,
             bin_size=place_bin_size)
 
-        if is_smooth:
+        if use_smoother:
             results = smooth(
                 filter_posterior=results['posterior_density'],
                 state_transition=self.state_transition_.values,
@@ -449,7 +449,7 @@ class SortedSpikeDecoder(_DecoderBase):
             state_transition=state_transition,
             likelihood=likelihood,
             bin_size=place_bin_size)
-        if is_smooth:
+        if use_smoother:
             results = smooth(
                 filter_posterior=results['posterior_density'],
                 state_transition=self.state_transition_.values,

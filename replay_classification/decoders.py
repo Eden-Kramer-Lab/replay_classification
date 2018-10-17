@@ -367,7 +367,8 @@ class SortedSpikeDecoder(_DecoderBase):
 
         self.combined_likelihood_kwargs_ = dict(
             log_likelihood_function=poisson_log_likelihood,
-            likelihood_kwargs=dict(conditional_intensity=conditional_intensity)
+            likelihood_kwargs=dict(conditional_intensity=conditional_intensity,
+                                   time_bin_size=self.time_bin_size)
         )
 
         return self

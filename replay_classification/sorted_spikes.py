@@ -2,10 +2,10 @@ from logging import getLogger
 
 import numpy as np
 import pandas as pd
-from patsy import build_design_matrices
+from patsy import build_design_matrices, dmatrix
 from statsmodels.api import families
+
 from regularized_glm import penalized_IRLS
-from patsy import dmatrix
 
 try:
     from IPython import get_ipython
@@ -47,13 +47,13 @@ def fit_glm_model(spikes, design_matrix, penalty=3):
             penalty=regularization_weights).coefficients)
 
 
-def predictors_by_trajectory_direction(trajectory_direction,
-                                       place_bin_centers,
-                                       design_matrix):
+def predictors_by_experimental_condition(experimental_condition,
+                                         place_bin_centers,
+                                         design_matrix):
     '''The design matrix for a given trajectory direction.
     '''
     predictors = {'position': place_bin_centers,
-                  'trajectory_direction': [trajectory_direction] *
+                  'experimental_condition': [experimental_condition] *
                   len(place_bin_centers)}
     return build_design_matrices(
         [design_matrix.design_info], predictors)[0]
@@ -101,19 +101,19 @@ def poisson_log_likelihood(is_spike, conditional_intensity=None,
             probability_no_spike)
 
 
-def fit_spike_observation_model(position, trajectory_direction, spikes,
-                                place_bin_centers, trajectory_directions,
+def fit_spike_observation_model(position, experimental_condition, spikes,
+                                place_bin_centers,
                                 knot_spacing, observation_state_order,
                                 spike_model_penalty=1E-1):
     min_position, max_position = np.nanmin(position), np.nanmax(position)
     n_steps = (max_position - min_position) // knot_spacing
     position_knots = min_position + np.arange(1, n_steps) * knot_spacing
-    formula = ('1 + trajectory_direction * '
+    formula = ('1 + experimental_condition * '
                'cr(position, knots=position_knots, constraints="center")')
 
     training_data = pd.DataFrame(dict(
         position=position,
-        trajectory_direction=trajectory_direction))
+        experimental_condition=experimental_condition))
     design_matrix = dmatrix(
         formula, training_data, return_type='dataframe')
     fit_coefficients = np.stack(
@@ -123,10 +123,10 @@ def fit_spike_observation_model(position, trajectory_direction, spikes,
          for s in tqdm(spikes.T, desc='neurons')], axis=1)
 
     ci_by_state = {
-        direction: get_conditional_intensity(
-            fit_coefficients, predictors_by_trajectory_direction(
-                direction, place_bin_centers, design_matrix))
-        for direction in trajectory_directions}
+        condition: get_conditional_intensity(
+            fit_coefficients, predictors_by_experimental_condition(
+                condition, place_bin_centers, design_matrix))
+        for condition in np.unique(observation_state_order)}
 
     conditional_intensity = np.stack(
         [ci_by_state[state] for state in observation_state_order],

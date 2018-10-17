@@ -12,7 +12,6 @@ from functools import wraps
 from logging import getLogger
 
 import numpy as np
-from scipy.stats import norm
 
 logger = getLogger(__name__)
 
@@ -134,7 +133,7 @@ def normalize_to_probability(distribution, bin_size):
 
 
 def predict_state(posterior, state_transition, bin_size):
-    '''The prior given the current posterior density and a transition
+    '''The prior given the previous posterior density and a transition
     matrix indicating the state at the next time step.
     '''
     return state_transition @ posterior * bin_size
@@ -211,42 +210,3 @@ def get_bin_centers(bin_edges):
     '''Given the outer-points of bins, find their center
     '''
     return bin_edges[:-1] + np.diff(bin_edges) / 2
-
-
-def uniform_initial_conditions(place_bin_centers):
-    '''
-    '''
-    bin_size = place_bin_centers[1] - place_bin_centers[0]
-    return normalize_to_probability(np.ones_like(place_bin_centers), bin_size)
-
-
-def inbound_outbound_initial_conditions(place_bin_centers):
-    '''Sets the prior for each state (Outbound-Forward, Outbound-Reverse,
-    Inbound-Forward, Inbound-Reverse).
-
-    Inbound states have greater weight on starting at the center arm.
-    Outbound states have weight everywhere else.
-
-    Parameters
-    ----------
-    place_bin_centers : ndarray, shape (n_bins,)
-        Histogram bin centers of the place measure
-
-    Returns
-    -------
-    initial_conditions : dict
-
-    '''
-    bin_size = place_bin_centers[1] - place_bin_centers[0]
-
-    outbound_initial_conditions = normalize_to_probability(
-        norm.pdf(place_bin_centers, loc=0,
-                 scale=bin_size * 2), bin_size)
-
-    inbound_initial_conditions = normalize_to_probability(
-        (np.max(outbound_initial_conditions) *
-         np.ones(place_bin_centers.shape)) -
-        outbound_initial_conditions, bin_size)
-
-    return {'Inbound': inbound_initial_conditions,
-            'Outbound': outbound_initial_conditions}

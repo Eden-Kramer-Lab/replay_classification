@@ -1,12 +1,22 @@
 import numpy as np
-import pandas as pd
 import xarray as xr
+from patsy import dmatrices
 from scipy.ndimage.filters import gaussian_filter
+from statsmodels.api import GLM, families
+
+
+def estimate_movement_std(position_info):
+
+    MODEL_FORMULA = 'position ~ lagged_position - 1'
+    response, design_matrix = dmatrices(MODEL_FORMULA, position_info)
+    fit = GLM(response, design_matrix, family=families.Gaussian()).fit()
+
+    return np.sqrt(fit.scale)
 
 
 def empirical_movement_transition_matrix(place, lagged_place, place_bin_edges,
                                          sequence_compression_factor=16,
-                                         is_condition=None):
+                                         is_condition=None, movement_std=0.1):
     '''Estimate the probablity of the next position based on the movement
      data, given the movment is sped up by the
      `sequence_compression_factor`
@@ -34,26 +44,23 @@ def empirical_movement_transition_matrix(place, lagged_place, place_bin_edges,
                                            n_bin_edges-1)
 
     '''
-    if is_condition is None:
-        is_condition = np.ones_like(place, dtype=bool)
-
     movement_bins, _, _ = np.histogram2d(
-        place[is_condition], lagged_place[is_condition],
-        bins=(place_bin_edges, place_bin_edges),
-        normed=False)
+        place, lagged_place,
+        bins=(place_bin_edges, place_bin_edges))
+    bin_size = np.diff(place_bin_edges)[0]
 
     smoothed_movement_bins_probability = gaussian_filter(
         _normalize_row_probability(
-            _fix_zero_bins(movement_bins)), sigma=0.5)
+            _fix_zero_bins(movement_bins), bin_size), sigma=movement_std)
     return np.linalg.matrix_power(
         smoothed_movement_bins_probability,
         sequence_compression_factor)
 
 
-def _normalize_row_probability(x):
+def _normalize_row_probability(x, bin_size):
     '''Ensure the state transition matrix rows sum to 1
     '''
-    return x / x.sum(axis=1, keepdims=True)
+    return x / (x.sum(axis=1, keepdims=True) * bin_size)
 
 
 def _fix_zero_bins(movement_bins):
@@ -64,25 +71,35 @@ def _fix_zero_bins(movement_bins):
     return movement_bins
 
 
-def fit_state_transition(position, lagged_position, place_bin_edges,
-                         place_bin_centers, trajectory_direction,
-                         replay_speedup_factor,
-                         state_transition_state_order, state_names):
-    trajectory_directions = np.unique(
-        trajectory_direction[pd.notnull(trajectory_direction)])
-    state_transition_by_state = {
-        direction: empirical_movement_transition_matrix(
-            position, lagged_position,
-            place_bin_edges, replay_speedup_factor,
-            np.in1d(trajectory_direction, direction))
-        for direction in trajectory_directions}
-    state_transition_matrix = np.stack(
-        [state_transition_by_state[state]
-         for state in state_transition_state_order])
+def fit_state_transition(position_info, place_bin_edges, place_bin_centers,
+                         replay_sequence_orders='Forward', replay_speed=20):
+    order_to_df_column = {'Forward': 'lagged_position',
+                          'Reverse': 'future_position',
+                          'Stay': 'position'}
+    if isinstance(replay_sequence_orders, str):
+        replay_sequence_orders = [replay_sequence_orders]
+
+    state_transition = []
+    state_names = []
+
+    for order in replay_sequence_orders:
+        column_name = order_to_df_column[order]
+        for condition, df in position_info.groupby('experimental_condition'):
+            state_names.append('-'.join((condition, order)))
+            movement_std = estimate_movement_std(df)
+            state_transition.append(
+                empirical_movement_transition_matrix(
+                    df.position, df[column_name], place_bin_edges,
+                    sequence_compression_factor=replay_speed,
+                    movement_std=movement_std))
+
+    state_transition = np.stack(state_transition)
+
     return xr.DataArray(
-        state_transition_matrix,
+        state_transition,
         dims=['state', 'position_t', 'position_t_1'],
-        coords=dict(state=state_names,
-                    position_t=place_bin_centers,
-                    position_t_1=place_bin_centers),
+        coords=dict(
+            state=state_names,
+            position_t=place_bin_centers,
+            position_t_1=place_bin_centers),
         name='state_transition_probability')

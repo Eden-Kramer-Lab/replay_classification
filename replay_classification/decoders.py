@@ -23,7 +23,7 @@ from .state_transition import fit_state_transition
 
 logger = getLogger(__name__)
 
-_DEFAULT_STATE_TRANSITION_STATE_ORDER = ['Forward', 'Reverse', 'Stay']
+_DEFAULT_REPLAY_ORDERS = ['Forward', 'Reverse', 'Stay']
 _INITIAL_CONDITIONS_MAP = {
     'Inbound-Outbound': inbound_outbound_initial_conditions,
     'Uniform': uniform_initial_conditions,
@@ -36,7 +36,7 @@ class _DecoderBase(BaseEstimator):
     def __init__(
         self, n_place_bins=None, place_bin_size=1,
         replay_speedup_factor=20,
-        state_transition_state_order=_DEFAULT_STATE_TRANSITION_STATE_ORDER,
+        replay_orders=_DEFAULT_REPLAY_ORDERS,
             time_bin_size=1, confidence_threshold=0.8):
         '''
 
@@ -47,7 +47,7 @@ class _DecoderBase(BaseEstimator):
         replay_speedup_factor : int, optional
         state_names : list of str, optional
         observation_state_order : list of str, optional
-        state_transition_state_order : list of str, optional
+        replay_orders : list of str, optional
         time_bin_size : float, optional
         confidence_threshold : float, optional
 
@@ -55,7 +55,7 @@ class _DecoderBase(BaseEstimator):
         self.n_place_bins = n_place_bins
         self.place_bin_size = place_bin_size
         self.replay_speedup_factor = replay_speedup_factor
-        self.state_transition_state_order = state_transition_state_order
+        self.replay_orders = replay_orders
         self.time_bin_size = time_bin_size
         self.confidence_threshold = confidence_threshold
 
@@ -92,7 +92,7 @@ class _DecoderBase(BaseEstimator):
             self.initial_conditions_ = (
                 _INITIAL_CONDITIONS_MAP[initial_conditions](
                     df, self.place_bin_edges, self.place_bin_centers,
-                    self.state_transition_state_order))
+                    self.replay_orders))
         else:
             self.initial_conditions_ = xr.DataArray(
                 initial_conditions, dims=['state', 'position'],
@@ -114,7 +114,7 @@ class _DecoderBase(BaseEstimator):
 
         self.state_transition_ = fit_state_transition(
             df, self.place_bin_edges, self.place_bin_centers,
-            replay_sequence_orders=self.state_transition_state_order,
+            replay_sequence_orders=self.replay_orders,
             replay_speed=self.replay_speedup_factor)
         observation_order = [state.split('-')[0] for state in
                              self.state_transition_.state.values.tolist()]
@@ -156,7 +156,7 @@ class ClusterlessDecoder(_DecoderBase):
     replay_speedup_factor : int, optional
     state_names : list of str, optional
     observation_state_order : list of str, optional
-    state_transition_state_order : list of str, optional
+    replay_orders : list of str, optional
     time_bin_size : float, optional
     confidence_threshold : float, optional
 
@@ -165,19 +165,20 @@ class ClusterlessDecoder(_DecoderBase):
     def __init__(
         self, n_place_bins=None, place_bin_size=1,
         replay_speedup_factor=20,
-        state_transition_state_order=_DEFAULT_STATE_TRANSITION_STATE_ORDER,
+        replay_orders=_DEFAULT_REPLAY_ORDERS,
         time_bin_size=1, confidence_threshold=0.8,
             model=KernelDensity, model_kwargs=dict(bandwidth=10)):
         super().__init__(n_place_bins, place_bin_size,
                          replay_speedup_factor,
-                         state_transition_state_order,
+                         replay_orders,
                          time_bin_size, confidence_threshold)
         self.model = model
         self.model_kwargs = model_kwargs
 
     def fit(self, position, trajectory_direction,
             multiunits, is_training=None,
-            initial_conditions='Inbound-Outbound', place_bin_edges=None):
+            trial_id=None, initial_conditions='Inbound-Outbound',
+            place_bin_edges=None):
         '''Fits the decoder model for each trajectory_direction.
 
         Relates the position and multiunits to the trajectory_direction.
@@ -299,7 +300,7 @@ class SortedSpikeDecoder(_DecoderBase):
     def __init__(
         self, n_place_bins=None, place_bin_size=1,
         replay_speedup_factor=20,
-        state_transition_state_order=_DEFAULT_STATE_TRANSITION_STATE_ORDER,
+        replay_orders=_DEFAULT_REPLAY_ORDERS,
         time_bin_size=1, confidence_threshold=0.8, knot_spacing=15,
             spike_model_penalty=1E-1):
         '''
@@ -309,7 +310,7 @@ class SortedSpikeDecoder(_DecoderBase):
         n_place_bins : None or int, optional
         place_bin_size : None or int, optional
         replay_speedup_factor : int, optional
-        state_transition_state_order : list of str, optional
+        replay_orders : list of str, optional
         time_bin_size : float, optional
         confidence_threshold : float, optional
         knot_spacing : float, optional
@@ -318,7 +319,7 @@ class SortedSpikeDecoder(_DecoderBase):
         '''
         super().__init__(n_place_bins, place_bin_size,
                          replay_speedup_factor,
-                         state_transition_state_order,
+                         replay_orders,
                          time_bin_size, confidence_threshold)
         self.knot_spacing = knot_spacing
         self.spike_model_penalty = spike_model_penalty

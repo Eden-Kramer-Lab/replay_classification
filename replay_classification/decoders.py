@@ -238,7 +238,7 @@ class ClusterlessDecoder(_DecoderBase):
         joint_mark_intensity_functions, ground_process_intensity = (
             fit_multiunit_observation_model(
                 position[is_training], experimental_condition[is_training],
-                multiunits[:, is_training], self.place_bin_centers,
+                multiunits[:, is_training, :], self.place_bin_centers,
                 self.model, self.model_kwargs, self.observation_state_order))
 
         likelihood_kwargs = dict(

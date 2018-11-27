@@ -29,6 +29,8 @@ _INITIAL_CONDITIONS_MAP = {
     'Uniform': uniform_initial_conditions,
     'Empirical': fit_initial_conditions
 }
+_DEFAULT_MULTIUNIT_MODEL_KWARGS = dict(bandwidth=10, leaf_size=1000,
+                                       rtol=1E-3)
 hv.extension('bokeh', 'matplotlib')
 
 
@@ -170,7 +172,7 @@ class ClusterlessDecoder(_DecoderBase):
         replay_speedup_factor=20,
         replay_orders=_DEFAULT_REPLAY_ORDERS,
         time_bin_size=1, confidence_threshold=0.8,
-            model=KernelDensity, model_kwargs=dict(bandwidth=10)):
+            model=KernelDensity, model_kwargs=_DEFAULT_MULTIUNIT_MODEL_KWARGS):
         super().__init__(n_place_bins, place_bin_size,
                          replay_speedup_factor,
                          replay_orders,

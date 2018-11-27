@@ -113,7 +113,7 @@ def fit_spike_observation_model(position, experimental_condition, spikes,
 
     training_data = pd.DataFrame(dict(
         position=position,
-        experimental_condition=experimental_condition))
+        experimental_condition=experimental_condition)).dropna()
     design_matrix = dmatrix(
         formula, training_data, return_type='dataframe')
     fit_coefficients = np.stack(

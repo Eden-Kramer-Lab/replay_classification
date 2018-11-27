@@ -16,7 +16,7 @@ def estimate_movement_std(position_info):
 
 def empirical_movement_transition_matrix(place, lagged_place, place_bin_edges,
                                          sequence_compression_factor=16,
-                                         is_condition=None, movement_std=0.1):
+                                         movement_std=0.1):
     '''Estimate the probablity of the next position based on the movement
      data, given the movment is sped up by the
      `sequence_compression_factor`
@@ -72,7 +72,8 @@ def _fix_zero_bins(movement_bins):
 
 
 def fit_state_transition(position_info, place_bin_edges, place_bin_centers,
-                         replay_sequence_orders='Forward', replay_speed=20):
+                         replay_sequence_orders='Forward', replay_speed=20,
+                         movement_std=None):
     order_to_df_column = {'Forward': 'lagged_position',
                           'Reverse': 'future_position',
                           'Stay': 'position'}
@@ -85,8 +86,9 @@ def fit_state_transition(position_info, place_bin_edges, place_bin_centers,
     for order in replay_sequence_orders:
         column_name = order_to_df_column[order]
         for condition, df in position_info.groupby('experimental_condition'):
-            state_names.append('-'.join((condition, order)))
-            movement_std = estimate_movement_std(df)
+            state_names.append('-'.join((str(condition), order)))
+            if movement_std is None:
+                movement_std = estimate_movement_std(df)
             state_transition.append(
                 empirical_movement_transition_matrix(
                     df.position, df[column_name], place_bin_edges,

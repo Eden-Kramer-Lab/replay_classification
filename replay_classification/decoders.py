@@ -39,7 +39,7 @@ class _DecoderBase(BaseEstimator):
         self, n_place_bins=None, place_bin_size=1,
         replay_speedup_factor=20,
         replay_orders=_DEFAULT_REPLAY_ORDERS,
-            time_bin_size=1, confidence_threshold=0.8):
+            time_bin_size=1, confidence_threshold=0.8, movement_std=None):
         '''
 
         Attributes
@@ -52,6 +52,7 @@ class _DecoderBase(BaseEstimator):
         replay_orders : list of str, optional
         time_bin_size : float, optional
         confidence_threshold : float, optional
+        movement_std : None or float, optional
 
         '''
         if n_place_bins is not None and place_bin_size is not None:
@@ -63,9 +64,7 @@ class _DecoderBase(BaseEstimator):
         self.replay_orders = replay_orders
         self.time_bin_size = time_bin_size
         self.confidence_threshold = confidence_threshold
-
-    def __dir__(self):
-        return self.keys()
+        self.movement_std = movement_std
 
     def fit_place_bins(self, position, place_bin_edges=None):
         if place_bin_edges is not None:
@@ -120,7 +119,8 @@ class _DecoderBase(BaseEstimator):
         self.state_transition_ = fit_state_transition(
             df, self.place_bin_edges, self.place_bin_centers,
             replay_sequence_orders=self.replay_orders,
-            replay_speed=self.replay_speedup_factor)
+            replay_speed=self.replay_speedup_factor,
+            movement_std=self.movement_std)
         observation_order = [state.split('-')[0] for state in
                              self.state_transition_.state.values.tolist()]
         self.observation_state_order = observation_order

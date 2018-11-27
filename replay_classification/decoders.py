@@ -36,7 +36,7 @@ hv.extension('bokeh', 'matplotlib')
 
 class _DecoderBase(BaseEstimator):
     def __init__(
-        self, n_place_bins=None, place_bin_size=1,
+        self, n_place_bins=None, place_bin_size=2.8,
         replay_speedup_factor=20,
         replay_orders=_DEFAULT_REPLAY_ORDERS,
             time_bin_size=1, confidence_threshold=0.8, movement_std=None):

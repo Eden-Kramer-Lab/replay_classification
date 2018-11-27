@@ -46,9 +46,9 @@ def filter(initial_conditions, state_transition, likelihood, bin_size):
         posterior[time_ind] = update_posterior(
             prior[time_ind], likelihood[time_ind], bin_size)
 
-    return {'posterior_density': posterior.squeeze(),
-            'likelihood': likelihood.squeeze(),
-            'prior': prior.squeeze()}
+    return {'posterior_density': posterior.squeeze(axis=-1),
+            'likelihood': likelihood.squeeze(axis=-1),
+            'prior': prior.squeeze(axis=-1)}
 
 
 def smooth(filter_posterior, state_transition, bin_size):

@@ -107,7 +107,7 @@ def fit_spike_observation_model(position, experimental_condition, spikes,
                                 spike_model_penalty=1E-1):
     min_position, max_position = np.nanmin(position), np.nanmax(position)
     n_steps = (max_position - min_position) // knot_spacing
-    position_knots = min_position + np.arange(1, n_steps) * knot_spacing
+    position_knots = min_position + np.arange(1, n_steps) * knot_spacing  # noqa: F841, E501
     formula = ('1 + experimental_condition * '
                'cr(position, knots=position_knots, constraints="center")')
 

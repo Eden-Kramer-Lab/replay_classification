@@ -84,7 +84,7 @@ def fit_state_transition(position_info, place_bin_edges, place_bin_centers,
     for order in replay_sequence_orders:
         column_name = order_to_df_column[order]
         for condition, df in position_info.groupby('experimental_condition'):
-            state_names.append('-'.join((str(condition), order)))
+            state_names.append('-'.join((condition, order)))
             if movement_std is None:
                 movement_std = estimate_movement_std(df)
             state_transition.append(

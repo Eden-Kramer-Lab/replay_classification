@@ -79,7 +79,7 @@ def joint_mark_intensity(
                 fitted_model.score_samples(predict_data))
 
     joint_mark_intensity = mean_rate * density / place_occupancy
-    joint_mark_intensity[is_nan] = 1.0
+    joint_mark_intensity[is_nan] = 0.0
     return joint_mark_intensity
 
 

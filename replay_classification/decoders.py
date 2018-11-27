@@ -369,7 +369,7 @@ class SortedSpikeDecoder(_DecoderBase):
             trial_id = np.asarray(trial_id).squeeze()
 
         if experimental_condition is None:
-            experimental_condition = np.ones_like(position, dtype=np.bool)
+            experimental_condition = np.full_like(position, '', dtype=object)
         else:
             experimental_condition = np.asarray(
                 experimental_condition.copy()).squeeze()

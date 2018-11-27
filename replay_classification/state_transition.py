@@ -35,8 +35,6 @@ def empirical_movement_transition_matrix(place, lagged_place, place_bin_edges,
     place_bin_edges : array_like, shape (n_bins,)
     sequence_compression_factor : int, optional
         How much the movement is sped-up during a replay event
-    is_condition : array_like, shape (n_time,)
-        Boolean indicator for an experimental condition.
     Returns
     -------
     empirical_movement_transition_matrix : array_like,

@@ -183,7 +183,7 @@ class ClusterlessDecoder(_DecoderBase):
 
     def fit(self, position, multiunits, experimental_condition=None,
             is_training=None, trial_id=None,
-            initial_conditions='Inbound-Outbound', place_bin_edges=None):
+            initial_conditions='Uniform', place_bin_edges=None):
         '''Fits the decoder model for each experimental_condition
         and replay order.
 
@@ -341,7 +341,7 @@ class SortedSpikeDecoder(_DecoderBase):
 
     def fit(self, position, spikes, experimental_condition=None,
             is_training=None, trial_id=None,
-            initial_conditions='Inbound-Outbound', place_bin_edges=None):
+            initial_conditions='Uniform', place_bin_edges=None):
         '''Fits the decoder model by state
 
         Relates the position and spikes to the state.

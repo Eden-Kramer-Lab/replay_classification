@@ -30,11 +30,11 @@ def estimate_movement_std(position):
 
 
 def empirical_movement_transition_matrix(place, lagged_place, place_bin_edges,
-                                         sequence_compression_factor=16,
-                                         movement_std=0.1):
+                                         replay_speed=20,
+                                         movement_std=0.5):
     '''Estimate the probablity of the next position based on the movement
      data, given the movment is sped up by the
-     `sequence_compression_factor`
+     `replay_speed`
 
     Place cell firing during a hippocampal replay event is a "sped-up"
     version of place cell firing when the animal is actually moving.
@@ -48,7 +48,7 @@ def empirical_movement_transition_matrix(place, lagged_place, place_bin_edges,
     lagged_place : array_like, shape (n_time,)
         Linearized position of the preivous time step
     place_bin_edges : array_like, shape (n_bins,)
-    sequence_compression_factor : int, optional
+    replay_speed : int, optional
         How much the movement is sped-up during a replay event
     Returns
     -------
@@ -60,14 +60,12 @@ def empirical_movement_transition_matrix(place, lagged_place, place_bin_edges,
     movement_bins, _, _ = np.histogram2d(
         place, lagged_place,
         bins=(place_bin_edges, place_bin_edges))
-    bin_size = np.diff(place_bin_edges)[0]
 
-    smoothed_movement_bins_probability = gaussian_filter(
-        _normalize_row_probability(
-            _fix_zero_bins(movement_bins), bin_size), sigma=movement_std)
-    return np.linalg.matrix_power(
-        smoothed_movement_bins_probability,
-        sequence_compression_factor)
+    movement_bins = _fix_zero_bins(movement_bins)
+    movement_bins = _normalize_row_probability(movement_bins)
+    movement_bins = gaussian_filter(movement_bins, sigma=movement_std)
+
+    return np.linalg.matrix_power(movement_bins, replay_speed)
 
 
 def _normalize_row_probability(x):
@@ -105,7 +103,7 @@ def fit_state_transition(position_info, place_bin_edges, place_bin_centers,
             state_transition.append(
                 empirical_movement_transition_matrix(
                     df.position, df[column_name], place_bin_edges,
-                    sequence_compression_factor=replay_speed,
+                    replay_speed=replay_speed,
                     movement_std=movement_std))
 
     state_transition = np.stack(state_transition)

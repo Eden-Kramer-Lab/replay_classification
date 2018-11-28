@@ -209,3 +209,11 @@ def get_bin_centers(bin_edges):
     '''Given the outer-points of bins, find their center
     '''
     return bin_edges[:-1] + np.diff(bin_edges) / 2
+
+
+def atleast_kd(array, k):
+    '''
+    https://stackoverflow.com/questions/42516569/numpy-add-variable-number-of-dimensions-to-an-array
+    '''
+    new_shape = array.shape + (1,) * (k - array.ndim)
+    return array.reshape(new_shape)

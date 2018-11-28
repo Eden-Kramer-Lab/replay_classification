@@ -6,6 +6,7 @@ from patsy import build_design_matrices, dmatrix
 from statsmodels.api import families
 
 from regularized_glm import penalized_IRLS
+from .core import atleast_kd
 
 try:
     from IPython import get_ipython
@@ -65,14 +66,6 @@ def get_conditional_intensity(fit_coefficients, predict_design_matrix):
     intensity = np.exp(np.dot(predict_design_matrix, fit_coefficients)).T
     intensity[np.isnan(intensity)] = np.spacing(1)
     return intensity
-
-
-def atleast_kd(array, k):
-    '''
-    https://stackoverflow.com/questions/42516569/numpy-add-variable-number-of-dimensions-to-an-array
-    '''
-    new_shape = array.shape + (1,) * (k - array.ndim)
-    return array.reshape(new_shape)
 
 
 def poisson_log_likelihood(is_spike, conditional_intensity=None,

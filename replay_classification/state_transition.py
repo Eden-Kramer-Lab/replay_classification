@@ -1,17 +1,32 @@
 import numpy as np
 import xarray as xr
-from patsy import dmatrices
+from .core import atleast_kd
 from scipy.ndimage.filters import gaussian_filter
 from statsmodels.api import GLM, families
 
 
-def estimate_movement_std(position_info):
+def estimate_movement_std(position):
+    '''Estimates the movement standard deviation based on position.
 
-    MODEL_FORMULA = 'position ~ lagged_position - 1'
-    response, design_matrix = dmatrices(MODEL_FORMULA, position_info)
-    fit = GLM(response, design_matrix, family=families.Gaussian()).fit()
+    WARNING: Need to use on original position, not interpolated position.
 
-    return np.sqrt(fit.scale)
+    Parameters
+    ----------
+    position : ndarray, shape (n_time, n_position_dim)
+
+    Returns
+    -------
+    movement_std : ndarray, shape (n_position_dim,)
+
+    '''
+    position = atleast_kd(position, 2)
+    is_nan = np.any(np.isnan(position), axis=1)
+    position = position[~is_nan]
+    movement_std = []
+    for p in position.T:
+        fit = GLM(p[:-1], p[1:], family=families.Gaussian()).fit()
+        movement_std.append(np.sqrt(fit.scale))
+    return np.array(movement_std)
 
 
 def empirical_movement_transition_matrix(place, lagged_place, place_bin_edges,

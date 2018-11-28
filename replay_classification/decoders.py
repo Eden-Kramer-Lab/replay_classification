@@ -417,7 +417,7 @@ class SortedSpikeDecoder(_DecoderBase):
 
         '''
         conditional_intensity = self.combined_likelihood_kwargs_[
-            'likelihood_kwargs']['conditional_intensity'].squeeze(axis=-2)
+            'likelihood_kwargs']['conditional_intensity'].squeeze(axis=-3)
         coords = dict(
             state=self.state_names,
             position=self.place_bin_centers)

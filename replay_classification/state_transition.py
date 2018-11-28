@@ -50,6 +50,7 @@ def empirical_movement_transition_matrix(place, lagged_place, place_bin_edges,
     place_bin_edges : array_like, shape (n_bins,)
     replay_speed : int, optional
         How much the movement is sped-up during a replay event
+
     Returns
     -------
     empirical_movement_transition_matrix : array_like,

@@ -85,7 +85,7 @@ def _fix_zero_bins(movement_bins):
 
 def fit_state_transition(position_info, place_bin_edges, place_bin_centers,
                          replay_sequence_orders='Forward', replay_speed=20,
-                         movement_std=None):
+                         movement_std=0.5):
     order_to_df_column = {'Forward': 'lagged_position',
                           'Reverse': 'future_position',
                           'Stay': 'position'}
@@ -99,8 +99,6 @@ def fit_state_transition(position_info, place_bin_edges, place_bin_centers,
         column_name = order_to_df_column[order]
         for condition, df in position_info.groupby('experimental_condition'):
             state_names.append('-'.join((condition, order)))
-            if movement_std is None:
-                movement_std = estimate_movement_std(df)
             state_transition.append(
                 empirical_movement_transition_matrix(
                     df.position, df[column_name], place_bin_edges,

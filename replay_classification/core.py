@@ -78,9 +78,9 @@ def smooth(filter_posterior, state_transition, bin_size):
             smoother_posterior[time_ind + 1], smoother_prior[time_ind],
             bin_size)
 
-    return {'filter_posterior': filter_posterior.squeeze(),
-            'posterior_density': smoother_posterior.squeeze(),
-            'prior': smoother_prior.squeeze()}
+    return {'filter_posterior': filter_posterior.squeeze(axis=-1),
+            'posterior_density': smoother_posterior.squeeze(axis=-1),
+            'prior': smoother_prior.squeeze(axis=-1)}
 
 
 def update_backwards_posterior(filter_posterior, state_transition,

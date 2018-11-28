@@ -171,12 +171,13 @@ class ClusterlessDecoder(_DecoderBase):
         self, n_place_bins=None, place_bin_size=1,
         replay_speedup_factor=20,
         replay_orders=_DEFAULT_REPLAY_ORDERS,
-        time_bin_size=1, confidence_threshold=0.8,
+        time_bin_size=1, confidence_threshold=0.8, movement_std=0.5,
             model=KernelDensity, model_kwargs=_DEFAULT_MULTIUNIT_MODEL_KWARGS):
         super().__init__(n_place_bins, place_bin_size,
                          replay_speedup_factor,
                          replay_orders,
-                         time_bin_size, confidence_threshold)
+                         time_bin_size, confidence_threshold,
+                         movement_std)
         self.model = model
         self.model_kwargs = model_kwargs
 
@@ -314,8 +315,8 @@ class SortedSpikeDecoder(_DecoderBase):
         self, n_place_bins=None, place_bin_size=1,
         replay_speedup_factor=20,
         replay_orders=_DEFAULT_REPLAY_ORDERS,
-        time_bin_size=1, confidence_threshold=0.8, knot_spacing=15,
-            spike_model_penalty=1E-1):
+        time_bin_size=1, confidence_threshold=0.8, movement_std=0.5,
+            knot_spacing=15, spike_model_penalty=1E-1):
         '''
 
         Attributes
@@ -333,7 +334,8 @@ class SortedSpikeDecoder(_DecoderBase):
         super().__init__(n_place_bins, place_bin_size,
                          replay_speedup_factor,
                          replay_orders,
-                         time_bin_size, confidence_threshold)
+                         time_bin_size, confidence_threshold,
+                         movement_std)
         self.knot_spacing = knot_spacing
         self.spike_model_penalty = spike_model_penalty
 

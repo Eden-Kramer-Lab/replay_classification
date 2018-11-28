@@ -55,10 +55,10 @@ def empirical_movement_transition_matrix(place, lagged_place, place_bin_edges,
         sequence_compression_factor)
 
 
-def _normalize_row_probability(x, bin_size):
+def _normalize_row_probability(x):
     '''Ensure the state transition matrix rows sum to 1
     '''
-    return x / (x.sum(axis=1, keepdims=True) * bin_size)
+    return x / x.sum(axis=1, keepdims=True)
 
 
 def _fix_zero_bins(movement_bins):

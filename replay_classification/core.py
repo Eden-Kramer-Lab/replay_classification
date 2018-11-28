@@ -42,7 +42,7 @@ def filter(initial_conditions, state_transition, likelihood, bin_size):
 
     for time_ind in np.arange(1, n_time):
         prior[time_ind] = predict_state(
-            posterior[time_ind - 1], state_transition, bin_size)
+            posterior[time_ind - 1], state_transition)
         posterior[time_ind] = update_posterior(
             prior[time_ind], likelihood[time_ind], bin_size)
 
@@ -72,8 +72,7 @@ def smooth(filter_posterior, state_transition, bin_size):
 
     for time_ind in np.arange(n_time - 2, -1, -1):
         smoother_prior[time_ind] = predict_state(
-            filter_posterior[time_ind], state_transition,
-            bin_size)
+            filter_posterior[time_ind], state_transition)
         smoother_posterior[time_ind] = update_backwards_posterior(
             filter_posterior[time_ind], state_transition,
             smoother_posterior[time_ind + 1], smoother_prior[time_ind],
@@ -132,11 +131,11 @@ def normalize_to_probability(distribution, bin_size):
     return distribution / np.nansum(distribution) / bin_size
 
 
-def predict_state(posterior, state_transition, bin_size):
+def predict_state(posterior, state_transition):
     '''The prior given the previous posterior density and a transition
     matrix indicating the state at the next time step.
     '''
-    return state_transition @ posterior * bin_size
+    return state_transition @ posterior
 
 
 def scaled_likelihood(log_likelihood_func):

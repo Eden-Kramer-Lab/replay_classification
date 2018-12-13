@@ -39,7 +39,7 @@ class _DecoderBase(BaseEstimator):
         self, n_place_bins=None, place_bin_size=2.8,
         replay_speedup_factor=20,
         replay_orders=_DEFAULT_REPLAY_ORDERS,
-            time_bin_size=1, confidence_threshold=0.8, movement_std=None):
+            confidence_threshold=0.8, movement_std=None):
         '''
 
         Attributes
@@ -50,7 +50,6 @@ class _DecoderBase(BaseEstimator):
         state_names : list of str, optional
         observation_state_order : list of str, optional
         replay_orders : list of str, optional
-        time_bin_size : float, optional
         confidence_threshold : float, optional
         movement_std : None or float, optional
 
@@ -62,7 +61,6 @@ class _DecoderBase(BaseEstimator):
         self.place_bin_size = place_bin_size
         self.replay_speedup_factor = replay_speedup_factor
         self.replay_orders = replay_orders
-        self.time_bin_size = time_bin_size
         self.confidence_threshold = confidence_threshold
         self.movement_std = movement_std
 
@@ -162,7 +160,6 @@ class ClusterlessDecoder(_DecoderBase):
     state_names : list of str, optional
     observation_state_order : list of str, optional
     replay_orders : list of str, optional
-    time_bin_size : float, optional
     confidence_threshold : float, optional
 
     '''
@@ -171,12 +168,12 @@ class ClusterlessDecoder(_DecoderBase):
         self, n_place_bins=None, place_bin_size=1,
         replay_speedup_factor=20,
         replay_orders=_DEFAULT_REPLAY_ORDERS,
-        time_bin_size=1, confidence_threshold=0.8, movement_std=0.5,
+        confidence_threshold=0.8, movement_std=0.5,
             model=KernelDensity, model_kwargs=_DEFAULT_MULTIUNIT_MODEL_KWARGS):
         super().__init__(n_place_bins, place_bin_size,
                          replay_speedup_factor,
                          replay_orders,
-                         time_bin_size, confidence_threshold,
+                         confidence_threshold,
                          movement_std)
         self.model = model
         self.model_kwargs = model_kwargs
@@ -244,9 +241,8 @@ class ClusterlessDecoder(_DecoderBase):
                 self.model, self.model_kwargs, self.observation_state_order))
 
         likelihood_kwargs = dict(
-            joint_mark_intensity_functions=joint_mark_intensity_functions,
-            ground_process_intensity=ground_process_intensity,
-            time_bin_size=self.time_bin_size)
+            log_joint_mark_intensity_functions=joint_mark_intensity_functions,
+            ground_process_intensity=ground_process_intensity)
 
         self.combined_likelihood_kwargs_ = dict(
             log_likelihood_function=poisson_mark_log_likelihood,
@@ -315,7 +311,7 @@ class SortedSpikeDecoder(_DecoderBase):
         self, n_place_bins=None, place_bin_size=1,
         replay_speedup_factor=20,
         replay_orders=_DEFAULT_REPLAY_ORDERS,
-        time_bin_size=1, confidence_threshold=0.8, movement_std=0.5,
+        confidence_threshold=0.8, movement_std=0.5,
             knot_spacing=15, spike_model_penalty=1E-1):
         '''
 
@@ -325,7 +321,6 @@ class SortedSpikeDecoder(_DecoderBase):
         place_bin_size : None or int, optional
         replay_speedup_factor : int, optional
         replay_orders : list of str, optional
-        time_bin_size : float, optional
         confidence_threshold : float, optional
         knot_spacing : float, optional
         spike_model_penalty : float, optional
@@ -333,8 +328,7 @@ class SortedSpikeDecoder(_DecoderBase):
         '''
         super().__init__(n_place_bins, place_bin_size,
                          replay_speedup_factor,
-                         replay_orders,
-                         time_bin_size, confidence_threshold,
+                         replay_orders, confidence_threshold,
                          movement_std)
         self.knot_spacing = knot_spacing
         self.spike_model_penalty = spike_model_penalty
@@ -402,8 +396,7 @@ class SortedSpikeDecoder(_DecoderBase):
 
         self.combined_likelihood_kwargs_ = dict(
             log_likelihood_function=poisson_log_likelihood,
-            likelihood_kwargs=dict(conditional_intensity=conditional_intensity,
-                                   time_bin_size=self.time_bin_size)
+            likelihood_kwargs=dict(conditional_intensity=conditional_intensity)
         )
 
         return self

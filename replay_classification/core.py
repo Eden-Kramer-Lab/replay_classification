@@ -101,7 +101,7 @@ def update_backwards_posterior(filter_posterior, state_transition,
 
     '''
     log_ratio = (np.log(smoother_posterior + np.spacing(1)) -
-                 np.log(prior + np.spacing(1))).swapaxes(1, 2)
+                 np.log(prior + np.spacing(1))).swapaxes(-2, -1)
     weights = np.exp(log_ratio) @ state_transition * bin_size
     weights = weights.squeeze()[..., np.newaxis]
     return normalize_to_probability(weights * filter_posterior, bin_size)
